@@ -170,7 +170,7 @@ def cmd_run(args: argparse.Namespace) -> int:
     plan[f"gemini:{cfg['judge']['model']}"] += sum(t["check_type"] == "judge" for t in tasks) * reps
     quota.preflight(dict(plan), f"{args.model} {args.mode} x{reps}")
     try:
-        run = RunDir.start(args.model, args.mode, resume=not args.new,
+        run = RunDir.start(args.model, args.mode, resume=not args.new, tasks_path=Path(args.tasks),
                            extra={"model_id": cfg["models"][args.model]["id"], "reps": reps,
                                   "n_tasks": len(tasks), "tools": sorted(tools)})
     except ResumeConflict as e:
@@ -186,7 +186,7 @@ def cmd_run(args: argparse.Namespace) -> int:
                     continue
                 rec = run_task(t, args.model, cfg, quota, tools, specs)
                 sc = score(t, rec["final_answer"], cfg, quota)
-                row = {"task_id": t["id"], "category": t["category"], "rep": rep, "model": args.model,
+                row = {"task_id": t["id"], "question": t["question"], "category": t["category"], "rep": rep, "model": args.model,
                        "mode": args.mode, **rec, "score": sc, "route": route_taken(rec, t)}
                 run.log("results", row)
                 ans = (rec["final_answer"] or rec["error"] or "").replace("\n", " ")[:90]
@@ -217,41 +217,56 @@ def _print_summary(rows: list[dict]) -> None:
 
 
 def cmd_memorized(args: argparse.Namespace) -> int:
-    """Aggregate the latest complete no_tools run per model into tasks/memorized.json and
-    rebuild tasks.jsonl with `memorized` flags."""
+    """Flag tasks a main-pair model answers correctly with zero tools.
+
+    Merges every complete no_tools run per model (newest first). A result only counts for a
+    task if it was for the task's *current* question: records carry the question text; older
+    records without it count only for tasks that were never rewritten."""
     import runpy
     from collections import defaultdict
 
     from .config import RUNS_DIR
     cfg = load_config()
-    mem: dict[str, dict] = defaultdict(lambda: {"memorized": False, "models": []})
+    tasks = load_tasks(TASKS_DIR / "tasks.jsonl")
+    by_id = {t["id"]: t for t in tasks}
+    models = cfg.get("experiment", {}).get("main_models", list(cfg["models"]))
+    verdict: dict[str, dict[str, bool]] = defaultdict(dict)   # task -> model -> correct
     used = []
-    for m in cfg["models"]:
+    for m in models:
         runs = [RunDir(p) for p in sorted(RUNS_DIR.glob(f"*_{m}_no_tools"), reverse=True)]
         runs = [r for r in runs if r.meta.get("status") == "complete"]
-        if not runs:
-            print(f"[memorized] no complete no_tools run for {m}; run: python -m bench run --model {m} --mode no_tools")
-            return 1
-        used.append(runs[0].id)
-        for r in latest_results(runs[0]):
-            if r["score"]["correct"]:
-                e = mem[r["task_id"]]
-                e["memorized"] = True
-                if m not in e["models"]:
-                    e["models"].append(m)
-    tasks = load_tasks(TASKS_DIR / "tasks.jsonl")
-    out = {t["id"]: mem.get(t["id"], {"memorized": False, "models": []}) for t in tasks}
-    (TASKS_DIR / "memorized.json").write_text(json.dumps({**out, "_runs": used}, indent=2) + "\n")
+        for r in runs:
+            took = 0
+            for rec in latest_results(r):
+                t = by_id.get(rec["task_id"])
+                if t is None or m in verdict[t["id"]]:
+                    continue
+                same_q = rec.get("question") == t["question"] if "question" in rec else "rewritten_from" not in t
+                if same_q:
+                    verdict[t["id"]][m] = bool(rec["score"]["correct"])
+                    took += 1
+            if took:
+                used.append(f"{r.id} ({took})")
+    missing = [(t["id"], m) for t in tasks for m in models if m not in verdict[t["id"]]]
+    if missing:
+        print(f"[memorized] {len(missing)} task/model pairs have no no_tools result for the current question, e.g. "
+              f"{missing[:6]}. Run: python -m bench run --model <m> --mode no_tools --task <id> ...")
+    out = {}
+    for t in tasks:
+        ms = [m for m, ok in verdict[t["id"]].items() if ok]
+        out[t["id"]] = {"memorized": bool(ms), "models": ms, "checked": sorted(verdict[t["id"]])}
+    (TASKS_DIR / "memorized.json").write_text(json.dumps({**out, "_runs": used, "_models": models}, indent=2) + "\n")
     runpy.run_path(str(TASKS_DIR / "build_tasks.py"), run_name="__main__")
     per_cat = defaultdict(list)
     for t in tasks:
-        if out[t["id"]]["memorized"]:
+        if out[t["id"]]["memorized"] and not t.get("known_answer"):
             per_cat[t["category"]].append(f"{t['id']}({','.join(out[t['id']]['models'])})")
-    print(f"[memorized] from runs: {used}")
+    print(f"[memorized] models={models} from runs: {used}")
+    print("  memorized, excluding the deliberate known_answer subset:")
     for c in ["static", "js_heavy", "pdf", "interactive"]:
-        flag = "  <- more than 1: swap candidates" if len(per_cat[c]) > 1 else ""
+        flag = "  <- more than 1" if len(per_cat[c]) > 1 else ""
         print(f"  {c:<12} {len(per_cat[c])}: {' '.join(per_cat[c]) or '-'}{flag}")
-    return 0
+    return 1 if missing else 0
 
 
 def _not_yet(phase: int):

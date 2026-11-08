@@ -87,3 +87,8 @@ rpm = 60
 [judge]
 # Fixed judge model + rubric (scoring.JUDGE_PROMPT). Validated against hand labels in Phase 4.
 model = "flash"
+
+[experiment]
+# Main model pair (decision 2026-11-08). Flash is a side run (1 rep free choice, no ablations).
+# Second main model pending: Llama 4 Scout was shut down on Groq (see NOTES.md).
+main_models = ["flash-lite"]

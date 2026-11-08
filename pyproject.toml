@@ -13,6 +13,7 @@ dependencies = [
     "lxml-html-clean==0.4.6",
     "markdownify==1.2.3",
     "matplotlib==3.11.2",
+    "mcp==2.3.0",
     "pypdf==7.0.0",
     "python-dotenv==1.2.4",
     "readability-lxml==0.9",

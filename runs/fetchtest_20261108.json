@@ -1,0 +1,23 @@
+{
+  "url": "https://www.random.org/integers/?num=1&min=100000000&max=999999999&col=1&base=10&format=plain&rnd=id.tsb-fetchtest-20261108",
+  "results": [
+    {
+      "model": "flash",
+      "answer": "I cannot access the internet or view the content of external URLs.",
+      "truth": "161246307",
+      "match": false,
+      "tokens_in": 91,
+      "tokens_out": 680,
+      "error": null
+    },
+    {
+      "model": "flash-lite",
+      "answer": "I do not have real-time internet access to visit URLs and retrieve current random numbers.",
+      "truth": "161246307",
+      "match": false,
+      "tokens_in": 91,
+      "tokens_out": 18,
+      "error": null
+    }
+  ]
+}

@@ -46,8 +46,8 @@ t("s02", "static", f"{B}/catalogue/tipping-the-velvet_999/index.html",
   "How many copies of this book are listed as available?", "20", "regex", r"\b20\b",
   via="'In stock (20 available)' in the raw HTML")
 t("s03", "static", "https://www.scrapethissite.com/pages/simple/",
-  "What population does this page list for Andorra?", "84000", "regex", r"\b84[,. ]?000\b",
-  via="Andorra entry in the raw HTML (first country listed)",
+  "What population does this page list for Anguilla?", "13254", "regex", r"\b13[,. ]?254\b",
+  via="Anguilla entry in the raw HTML (char ~985 of extracted text)",
   note="The answer is what the page says, not today's real population.")
 t("s04", "static", "https://www.sqlite.org/limits.html",
   "For SQLite versions after 3.32.0, what is the default value of SQLITE_MAX_VARIABLE_NUMBER?",
@@ -58,8 +58,9 @@ t("s05", "static", "https://www.sqlite.org/fileformat2.html",
   "The database page size in bytes", "judge",
   via="Database header table: offset 16, size 2, 'The database page size in bytes'", mem="medium")
 t("s06", "static", "https://www.postgresql.org/docs/16/datatype-numeric.html",
-  "In PostgreSQL 16, up to how many digits after the decimal point can a numeric value have?",
-  "16383", "regex", r"\b16[,. ]?383\b", via="Numeric types table")
+  "In PostgreSQL 16, what range of values is permitted for the scale in a numeric type declaration?",
+  "-1000 to 1000", "regex", r"-\s?1,?000\s*(?:to|and|through|–|-|\.\.)\s*\+?1,?000",
+  via="Note in section 8.1.2: 'permits the scale ... to be any value in the range -1000 to 1000'")
 t("s07", "static", "https://www.postgresql.org/docs/16/datatype-datetime.html",
   "What is the high value (latest date) supported by the PostgreSQL 16 date type?",
   "5874897 AD", "regex", r"5[,. ]?874[,. ]?897", via="Date/time types table")
@@ -75,7 +76,7 @@ t("s10", "static", "https://www.rfc-editor.org/rfc/rfc2324.html",
 
 # ---- js_heavy: content only after JS runs -------------------------------------
 t("j01", "js_heavy", f"{Q}/js/",
-  "What tags are attached to the Steve Martin quote on this page?", "humor, obvious, simile", "judge",
+  "What tags are attached to the Jane Austen quote on this page?", "aliteracy, books, classic, humor", "judge",
   via="Data array embedded in the page script (rendered by JS)")
 t("j02", "js_heavy", f"{Q}/js-delayed/",
   "Who is the author of the 7th quote on this page?", "André Gide", "regex", r"Andr[eé]\s+Gide",
@@ -94,8 +95,9 @@ t("j06", "js_heavy", f"{DT}/data_sources/ajax.html",
   "What is Airi Satou's start date in this table?", "2008-11-28", "regex",
   r"2008[-/.]11[-/.]28|28(th)?\s+Nov(ember)?,?\s+2008", via="../ajax/data/arrays.txt; table filled by AJAX")
 t("j07", "js_heavy", f"{DT}/server_side/simple.html",
-  "What is Cedric Kelly's salary in this table?", "$433,060", "regex", r"433[,. ]?060",
-  via="server_processing.php response; Cedric Kelly is in the first 10 rows (sorted by first name)")
+  "What is Caesar Vance's start date in this table?", "12th Dec 11 (2011-12-12)", "regex",
+  r"12(?:th)?\s+Dec(?:ember)?,?\s+(?:20)?11\b|2011[-/.]12[-/.]12",
+  via="server_processing.php response (rendered as '12th Dec 11'); row 8 of the first page sorted by first name")
 t("j08", "js_heavy", "https://petstore.swagger.io/",
   "According to the API description on this page, what API key can you use to test the authorization filters?",
   "special-key", "contains", via="/v2/swagger.json info.description; page rendered by Swagger UI", mem="medium")
@@ -117,8 +119,8 @@ t("p02", "pdf", "https://arxiv.org/pdf/1706.03762v7",
 t("p03", "pdf", "https://arxiv.org/pdf/1810.04805v2",
   "In Table 1, what score did BERT-LARGE get on CoLA?", "60.5", "contains", via="pypdf page 6", mem="medium")
 t("p04", "pdf", "https://arxiv.org/pdf/1512.03385v1",
-  "In Table 4, what is the single-model top-5 error rate of ResNet-152?", "4.49", "contains",
-  via="pypdf page 6", mem="medium")
+  "In Table 2, what top-1 error (10-crop testing) did the 34-layer plain network get?", "28.54", "contains",
+  via="pypdf page 5 (Table 2: plain 34 layers 28.54, ResNet 25.03)")
 t("p05", "pdf", "https://arxiv.org/pdf/1505.04597v1",
   "What IOU did u-net achieve on the PhC-U373 dataset?", "0.9203", "contains",
   via="pypdf page 7 (segmentation results table)")
@@ -132,11 +134,14 @@ t("p07", "pdf", "https://www.cs.utexas.edu/~EWD/ewd02xx/EWD215.PDF",
   note="Page 1 is a typed copyright notice (the only text layer pypdf finds, 241 chars). The answer "
        "is only in the scanned pages, so OCR is needed. The title was rejected: it's on the typed page.")
 t("p08", "pdf", "https://www.bls.gov/news.release/archives/cpi_01112024.pdf",
-  "By what percentage did the food at home index rise over the 12 months to December 2023?",
-  "1.3 percent", "regex", r"\b1\.3\s*(%|percent)", via="pypdf page 3")
+  "By what percentage did the motor vehicle insurance index increase in December 2023 (month over month)?",
+  "1.5 percent", "regex", r"\b1\.5\s*(%|percent)",
+  via="pypdf page 4: 'The motor vehicle insurance index increased 1.5 percent in December'")
 t("p09", "pdf", "https://arxiv.org/pdf/1502.03167v3",
-  "What maximum accuracy did the BN-x30 model reach, per the table in Figure 3?", "74.8%", "contains",
-  via="pypdf page 7")
+  "Per the table in Figure 3, how many training steps did BN-x5 need to reach Inception's maximum accuracy (72.2%)?",
+  "2.1 x 10^6", "regex",
+  r"2\.1\s*(?:[·x×*⋅]|\\cdot|\\times)?\s*10\s*\^?\s*\{?6\}?|2\.1\s*(?:million|M\b)|2,100,000",
+  via="pypdf page 7 (superscript flattened to '106')")
 t("p10", "pdf", "https://arxiv.org/pdf/1301.3781v3",
   "In Table 3, which architecture had the highest syntactic accuracy?", "CBOW", "judge",
   via="pypdf page 7: CBOW 64 vs Skip-gram 59, NNLM 53, RNNLM 36")
@@ -162,8 +167,8 @@ t("i06", "interactive", f"{B}/",
   "What is the UPC of the book 'Sharp Objects' on this site?", "e00eb4fd7b871a48", "contains",
   via="Sharp Objects product page")
 t("i07", "interactive", f"{DT}/api/row_details.html",
-  "What is Ashton Cox's extension number? It is shown when you expand his row.", "1562", "regex", r"\b1562\b",
-  via="../ajax/data/objects.txt; the extension is only shown in the expanded child row")
+  "What is Zenaida Frank's extension number? It is shown when you expand her row.", "7439", "regex", r"\b7439\b",
+  via="../ajax/data/objects.txt; row 56 of 57 (needs paging or search), only shown in the expanded child row")
 t("i08", "interactive", f"{DT}/data_sources/ajax.html",
   "What is Zorita Serrano's start date in this table?", "2012-06-01", "regex",
   r"2012[-/.]0?6[-/.]0?1\b|1(st)?\s+Jun(e)?,?\s+2012",
@@ -189,6 +194,21 @@ URL_NAVIGABLE = {
     "i09": (True, "Tag pages: /tag/humor/ and /tag/humor/page/2/."),
     "i10": (True, "Page 1 links to /pagination/2, /3 and /13."),
 }
+# Memorized in no_tools (Flash-Lite, 2026-11-08) -> question rewritten to a less-cited detail on the same page.
+REWRITTEN_FROM = {
+    "s03": "What population does this page list for Andorra? -> 84000",
+    "s06": "In PostgreSQL 16, up to how many digits after the decimal point can a numeric value have? -> 16383",
+    "j01": "What tags are attached to the Steve Martin quote on this page? -> humor, obvious, simile",
+    "j07": "What is Cedric Kelly's salary in this table? -> $433,060",
+    "p04": "In Table 4, what is the single-model top-5 error rate of ResNet-152? -> 4.49",
+    "p08": "By what percentage did the food at home index rise over the 12 months to December 2023? -> 1.3 percent",
+    "p09": "What maximum accuracy did the BN-x30 model reach, per the table in Figure 3? -> 74.8%",
+    "i07": "What is Ashton Cox's extension number? -> 1562",
+}
+# Memorized in no_tools but deliberately kept unchanged: does the agent still call tools
+# when it could answer from memory?
+KNOWN_ANSWER = {"s04", "j08", "p03", "i08"}
+
 ANALYSIS_FLAGS = {
     "i10": ("tight_call_budget",
             "The answer is on /pagination/3. A page-by-page scan (1, 2, 3) uses exactly the 3-call cap; jumping "
@@ -200,6 +220,9 @@ def apply_annotations(tasks: list[dict]) -> None:
     for d in tasks:
         if d["id"] in URL_NAVIGABLE:
             d["url_navigable"], d["url_route"] = URL_NAVIGABLE[d["id"]]
+        if d["id"] in REWRITTEN_FROM:
+            d["rewritten_from"] = REWRITTEN_FROM[d["id"]]
+        d["known_answer"] = d["id"] in KNOWN_ANSWER
         if d["id"] in ANALYSIS_FLAGS:
             d["analysis_flag"], d["analysis_note"] = ANALYSIS_FLAGS[d["id"]]
     # memorized.json is written by `python -m bench memorized` from the no_tools runs.
@@ -207,8 +230,9 @@ def apply_annotations(tasks: list[dict]) -> None:
     if mem_path.exists():
         mem = json.loads(mem_path.read_text(encoding="utf-8"))
         for d in tasks:
-            m = mem.get(d["id"], {"memorized": False, "models": []})
+            m = mem.get(d["id"], {"memorized": False, "models": [], "checked": []})
             d["memorized"], d["memorized_by"] = m["memorized"], m["models"]
+            d["memorized_checked_on"] = m.get("checked", [])
 
 
 if __name__ == "__main__":

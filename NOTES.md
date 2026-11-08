@@ -224,3 +224,53 @@ check and writes `tasks/plain_visibility.json`.
   in many scraping tutorials. Planned test: ask Flash about a random.org `rnd=id.<seed>` URL
   (deterministic per seed, checkable locally, can't be memorized).
 - Flash-Lite no_tools (complete): 12/40 correct from memory, so memorization is not rare.
+
+## Model change and memorization rewrites (2026-11-08)
+
+- **`url_navigable` is classified by data reachability, not UI intent** (user decision). A task is
+  `url_navigable: true` if a fetch-only agent can reach the answer by fetching some URL that is
+  visible in what a fetch tool returns: pagination, tag, category or query-param links, or a data
+  file named in printed example code (DataTables i07/i08). It's `false` only when no such URL is
+  visible (i01 Load More XHR; i02 href="#" links whose endpoint lives only in external JS).
+- **Llama 4 Scout is gone from Groq.** Shut down 2026-07-17 (deprecation page; suggested replacements
+  `openai/gpt-oss-120b` or `qwen/qwen3.6-27b`, and the models page now lists `qwen/qwen3.8-27b`).
+  Groq's Developer-plan limits for those models are **8K TPM**, and free-plan limits aren't public
+  (they're on the logged-in limits page). 8K TPM can't take one request with a 50k-char tool
+  result (~12k tokens), let alone a 3-call conversation where earlier tool results are re-sent.
+  Model choice is pending user input. Cerebras' free trial lists gpt-oss-120b and qwen-3.8-27b at
+  5 RPM, 30K uncached TPM / 90K total TPM, 1M TPD, which would fit.
+- **LiteLLM crashed on any request with `tools`**: `ModuleNotFoundError: No module named 'mcp'`
+  (litellm 1.108.3 imports its MCP handler lazily on the tools path). Every tool-calling run would
+  have died. Fixed by adding `mcp==2.3.0`. This was found by the offline request-capture check, not
+  by a live run.
+- **Verified: LiteLLM never attaches built-in Gemini tools.** A local fake Gemini endpoint captured
+  the exact request bodies for both models in three shapes (no tools / function tools /
+  tool_choice none). There was no `url_context`, `google_search` or `code_execution`; only our
+  function declarations, plus `functionCallingConfig: NONE` for tool_choice none. Now a regression
+  test (`tests/test_llm_requests.py`). So any "browsing" by Flash in no_tools would be
+  server-side and unrequested; the random.org test checks that.
+- **Memorized-task rewrites.** Flash-Lite's 12 memorized tasks: 4 kept unchanged as the
+  `known_answer: true` subset (s04, j08, p03, i08; one per category), 8 rewritten to a
+  less-cited detail on the same URL (s03, s06, j01, j07, p04, p08, p09, i07), each with
+  `rewritten_from`. Ground truth was re-verified with free requests, and all rewrites passed the
+  self-tests and the plain-fetch visibility check.
+- Git Bash's `TZ=America/Los_Angeles date` silently prints UTC on Windows. Python's zoneinfo
+  (used by the quota) is correct. Don't trust shell `date` for quota reset times here.
+- **random.org test: Gemini does not fetch.** For a random.org URL with a fixed seed (truth 161246307,
+  fetched twice locally), both Flash and Flash-Lite replied that they can't access URLs
+  (`runs/fetchtest_20261108.json`). With the request-capture test, this means no_tools results for
+  Gemini are valid, and Flash's 9/9 on s01–s09 was **memorization**: it knows books.toscrape,
+  scrapethissite and the PostgreSQL/SQLite pages verbatim. Flash is a side run, so its
+  memorization doesn't drive rewrites; it will be reported alongside its results. Flash's no_tools
+  run is still partial (9/40).
+- **After the rewrites (Flash-Lite no_tools on the 8 new questions): 6 of 8 are no longer
+  memorized.** Two still are: j07 (Flash-Lite appears to know the whole DataTables sample dataset,
+  its third hit after i07/i08) and p08 (December 2023 motor-insurance CPI was widely reported).
+  Both are left as `memorized: true` (1 per category, within the threshold) and reported
+  separately. They are not part of the deliberate `known_answer` subset.
+- **Resume now also hashes the task file**, so editing questions blocks resuming a run started
+  with the old ones. Result records now carry the question text, and `bench memorized` only
+  credits a result to a task if it was for the task's current question.
+- A quoting slip in a scripted edit put a literal newline into a string in cli.py, which only
+  showed up when the CLI was run. Added `tests/test_cli.py` (imports the CLI and parses every
+  subcommand) so a broken CLI fails the test suite.

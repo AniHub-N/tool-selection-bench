@@ -33,3 +33,13 @@ def test_changed_config_blocks_resume(tmp_path):
     r1._write_meta(meta)
     with pytest.raises(ResumeConflict):
         RunDir.start("flash", "free", runs_dir=tmp_path)
+
+
+def test_changed_tasks_file_blocks_resume(tmp_path):
+    tasks = tmp_path / "tasks.jsonl"
+    tasks.write_text('{"id": "a"}\n')
+    RunDir.start("flash", "free", runs_dir=tmp_path, tasks_path=tasks)
+    assert RunDir.start("flash", "free", runs_dir=tmp_path, tasks_path=tasks)  # same file: resumes
+    tasks.write_text('{"id": "b"}\n')
+    with pytest.raises(ResumeConflict):
+        RunDir.start("flash", "free", runs_dir=tmp_path, tasks_path=tasks)

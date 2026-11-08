@@ -19,7 +19,7 @@
     "id": "s03",
     "category": "static",
     "plain_sees_answer": "yes",
-    "position": 659,
+    "position": 1037,
     "content_len": 23174,
     "error": null
   },
@@ -43,7 +43,7 @@
     "id": "s06",
     "category": "static",
     "plain_sees_answer": "yes",
-    "position": 731,
+    "position": 5869,
     "content_len": 16105,
     "error": null
   },
@@ -187,7 +187,7 @@
     "id": "p04",
     "category": "pdf",
     "plain_sees_answer": "yes",
-    "position": 24364,
+    "position": 21401,
     "content_len": 49604,
     "error": null
   },
@@ -219,7 +219,7 @@
     "id": "p08",
     "category": "pdf",
     "plain_sees_answer": "yes",
-    "position": 3759,
+    "position": 5829,
     "content_len": 31599,
     "error": null
   },
@@ -227,7 +227,7 @@
     "id": "p09",
     "category": "pdf",
     "plain_sees_answer": "yes",
-    "position": 30559,
+    "position": 30528,
     "content_len": 44780,
     "error": null
   },

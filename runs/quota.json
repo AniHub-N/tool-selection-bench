@@ -1,16 +1,16 @@
 {
   "gemini": {
     "flash": {
-      "day": "2026-11-07",
-      "requests": 21,
-      "tokens_in": 2697,
-      "tokens_out": 6346
+      "day": "2026-11-08",
+      "requests": 3,
+      "tokens_in": 358,
+      "tokens_out": 811
     },
     "flash-lite": {
-      "day": "2026-11-07",
-      "requests": 83,
-      "tokens_in": 3498,
-      "tokens_out": 3666
+      "day": "2026-11-08",
+      "requests": 9,
+      "tokens_in": 458,
+      "tokens_out": 548
     }
   },
   "firecrawl_scrape": {
@@ -24,5 +24,5 @@
     "steps": 0,
     "calls": 1
   },
-  "list_usd_total": 0.041036
+  "list_usd_total": 0.045852
 }

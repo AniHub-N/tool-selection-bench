@@ -1,0 +1,301 @@
+{
+  "s01": {
+    "memorized": false,
+    "models": [],
+    "checked": [
+      "flash-lite"
+    ]
+  },
+  "s02": {
+    "memorized": false,
+    "models": [],
+    "checked": [
+      "flash-lite"
+    ]
+  },
+  "s03": {
+    "memorized": false,
+    "models": [],
+    "checked": [
+      "flash-lite"
+    ]
+  },
+  "s04": {
+    "memorized": true,
+    "models": [
+      "flash-lite"
+    ],
+    "checked": [
+      "flash-lite"
+    ]
+  },
+  "s05": {
+    "memorized": false,
+    "models": [],
+    "checked": [
+      "flash-lite"
+    ]
+  },
+  "s06": {
+    "memorized": false,
+    "models": [],
+    "checked": [
+      "flash-lite"
+    ]
+  },
+  "s07": {
+    "memorized": false,
+    "models": [],
+    "checked": [
+      "flash-lite"
+    ]
+  },
+  "s08": {
+    "memorized": false,
+    "models": [],
+    "checked": [
+      "flash-lite"
+    ]
+  },
+  "s09": {
+    "memorized": false,
+    "models": [],
+    "checked": [
+      "flash-lite"
+    ]
+  },
+  "s10": {
+    "memorized": false,
+    "models": [],
+    "checked": [
+      "flash-lite"
+    ]
+  },
+  "j01": {
+    "memorized": false,
+    "models": [],
+    "checked": [
+      "flash-lite"
+    ]
+  },
+  "j02": {
+    "memorized": false,
+    "models": [],
+    "checked": [
+      "flash-lite"
+    ]
+  },
+  "j03": {
+    "memorized": false,
+    "models": [],
+    "checked": [
+      "flash-lite"
+    ]
+  },
+  "j04": {
+    "memorized": false,
+    "models": [],
+    "checked": [
+      "flash-lite"
+    ]
+  },
+  "j05": {
+    "memorized": false,
+    "models": [],
+    "checked": [
+      "flash-lite"
+    ]
+  },
+  "j06": {
+    "memorized": false,
+    "models": [],
+    "checked": [
+      "flash-lite"
+    ]
+  },
+  "j07": {
+    "memorized": true,
+    "models": [
+      "flash-lite"
+    ],
+    "checked": [
+      "flash-lite"
+    ]
+  },
+  "j08": {
+    "memorized": true,
+    "models": [
+      "flash-lite"
+    ],
+    "checked": [
+      "flash-lite"
+    ]
+  },
+  "j09": {
+    "memorized": false,
+    "models": [],
+    "checked": [
+      "flash-lite"
+    ]
+  },
+  "j10": {
+    "memorized": false,
+    "models": [],
+    "checked": [
+      "flash-lite"
+    ]
+  },
+  "p01": {
+    "memorized": false,
+    "models": [],
+    "checked": [
+      "flash-lite"
+    ]
+  },
+  "p02": {
+    "memorized": false,
+    "models": [],
+    "checked": [
+      "flash-lite"
+    ]
+  },
+  "p03": {
+    "memorized": true,
+    "models": [
+      "flash-lite"
+    ],
+    "checked": [
+      "flash-lite"
+    ]
+  },
+  "p04": {
+    "memorized": false,
+    "models": [],
+    "checked": [
+      "flash-lite"
+    ]
+  },
+  "p05": {
+    "memorized": false,
+    "models": [],
+    "checked": [
+      "flash-lite"
+    ]
+  },
+  "p06": {
+    "memorized": false,
+    "models": [],
+    "checked": [
+      "flash-lite"
+    ]
+  },
+  "p07": {
+    "memorized": false,
+    "models": [],
+    "checked": [
+      "flash-lite"
+    ]
+  },
+  "p08": {
+    "memorized": true,
+    "models": [
+      "flash-lite"
+    ],
+    "checked": [
+      "flash-lite"
+    ]
+  },
+  "p09": {
+    "memorized": false,
+    "models": [],
+    "checked": [
+      "flash-lite"
+    ]
+  },
+  "p10": {
+    "memorized": false,
+    "models": [],
+    "checked": [
+      "flash-lite"
+    ]
+  },
+  "i01": {
+    "memorized": false,
+    "models": [],
+    "checked": [
+      "flash-lite"
+    ]
+  },
+  "i02": {
+    "memorized": false,
+    "models": [],
+    "checked": [
+      "flash-lite"
+    ]
+  },
+  "i03": {
+    "memorized": false,
+    "models": [],
+    "checked": [
+      "flash-lite"
+    ]
+  },
+  "i04": {
+    "memorized": false,
+    "models": [],
+    "checked": [
+      "flash-lite"
+    ]
+  },
+  "i05": {
+    "memorized": false,
+    "models": [],
+    "checked": [
+      "flash-lite"
+    ]
+  },
+  "i06": {
+    "memorized": false,
+    "models": [],
+    "checked": [
+      "flash-lite"
+    ]
+  },
+  "i07": {
+    "memorized": false,
+    "models": [],
+    "checked": [
+      "flash-lite"
+    ]
+  },
+  "i08": {
+    "memorized": true,
+    "models": [
+      "flash-lite"
+    ],
+    "checked": [
+      "flash-lite"
+    ]
+  },
+  "i09": {
+    "memorized": false,
+    "models": [],
+    "checked": [
+      "flash-lite"
+    ]
+  },
+  "i10": {
+    "memorized": false,
+    "models": [],
+    "checked": [
+      "flash-lite"
+    ]
+  },
+  "_runs": [
+    "20261108T080201Z_flash-lite_no_tools (8)",
+    "20261108T070842Z_flash-lite_no_tools (32)"
+  ],
+  "_models": [
+    "flash-lite"
+  ]
+}

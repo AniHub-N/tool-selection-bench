@@ -56,9 +56,11 @@ class RunDir:
 
     @classmethod
     def start(cls, model: str, mode: str, extra: dict[str, Any] | None = None,
-              resume: bool = True, runs_dir: Path = RUNS_DIR) -> "RunDir":
+              resume: bool = True, runs_dir: Path = RUNS_DIR, tasks_path: Path | None = None) -> "RunDir":
         safe_model = re.sub(r"[^A-Za-z0-9.-]+", "-", model)
         h = experiment_hash()
+        if tasks_path is not None:  # task edits must also block resuming (questions changed)
+            h += "-" + hashlib.sha256(Path(tasks_path).read_bytes()).hexdigest()[:12]
         if resume:
             for p in sorted(runs_dir.glob(f"*_{safe_model}_{mode}"), reverse=True):
                 meta = json.loads((p / "meta.json").read_text())

@@ -1,0 +1,83 @@
+# tool-selection-bench config. Every run copies this file into its run directory.
+# Budget is $0: free tiers only. Spend is tracked as free-quota units, and every
+# call also records what it WOULD cost at list price (for the cost charts).
+
+seed = 1234
+
+[tools]
+enabled = ["plain_fetch", "firecrawl_scrape", "tinyfish_fetch", "tinyfish_agent"]
+pdf_max_pages = 10          # same page cap for every tool that parses PDFs (fairness + credits)
+
+[tools.plain_fetch]
+timeout_s = 30
+list_usd_per_call = 0.0
+
+[tools.firecrawl_scrape]
+timeout_ms = 60000
+list_usd_per_credit = 0.005 # $5 per 1,000 credits (Hobby top-up rate)
+
+[tools.tinyfish_fetch]
+per_url_timeout_ms = 60000
+list_usd_per_url = 0.0      # Fetch is free; no list price published
+
+[tools.tinyfish_agent]
+browser_profile = "lite"
+max_steps = 5
+max_duration_seconds = 120
+usd_per_step = 0.016        # TinyFish pricing page; the live wallet rate overrides this at preflight
+oracle_categories = ["interactive"]   # oracle sweep runs the agent on these categories only
+
+[agent]
+max_tool_calls = 3
+temperature = 0.0
+max_content_chars = 20000   # tool output truncated to this before going to the LLM
+system_prompt = "Answer the question using the tools available."
+
+# Short name -> LiteLLM model id + list prices (USD per 1M tokens, Standard tier,
+# from ai.google.dev pricing, checked 2026-11-08). Both are on the free tier.
+[models.flash]
+id = "gemini/gemini-3.8-flash"
+usd_per_mtok_in = 0.75      # rises to 1.50 on 2027-01-01
+usd_per_mtok_out = 3.75     # rises to 7.50 on 2027-01-01
+
+[models.flash-lite]
+id = "gemini/gemini-3.5-flash-lite"
+usd_per_mtok_in = 0.30
+usd_per_mtok_out = 2.50
+
+# ---------------------------------------------------------------------------
+# Free-quota limits. Excluded from the run's config hash, so editing these
+# does not block resuming a run.
+[quota]
+ledger = "runs/quota.json"
+
+# Gemini free-tier limits are per Google Cloud project and only shown in AI Studio
+# (https://aistudio.google.com/rate-limit). These are CONSERVATIVE PLACEHOLDERS:
+# replace with the numbers on your dashboard. RPD resets at midnight Pacific.
+[quota.gemini.flash]
+rpm = 10
+rpd = 250
+stop_frac = 0.9             # pause at 90% of RPD, leaving headroom
+
+[quota.gemini.flash-lite]
+rpm = 15
+rpd = 1000
+stop_frac = 0.9
+
+[quota.firecrawl_scrape]
+rpm = 10                    # free plan: 10 scrapes/min, 2 concurrent (we run serially)
+free_credits = 1000         # per billing month
+stop_at = 800               # pause once 800 credits are used this month
+
+[quota.tinyfish_fetch]
+rpm = 25                    # free-trial figure; personal accounts get more
+free_per_day = 1000         # free allowance, resets 00:00 UTC
+stop_at = 900               # past the allowance, fetch bills the wallet; don't let it
+
+[quota.tinyfish_agent]
+rpm = 6
+cap_usd = 6.0               # hard global cap on agent spend (of the $8 signup credit)
+min_wallet_usd = 0.5        # also pause if the live wallet would drop below this
+
+[quota.plain_fetch]
+rpm = 60

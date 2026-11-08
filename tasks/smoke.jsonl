@@ -1,0 +1,2 @@
+{"id": "smoke-static", "category": "static", "url": "https://docs.python.org/3.11/library/json.html", "question": "What is the default value of the indent parameter of json.dumps?", "expected_answer": "pretty-printed", "check_type": "contains"}
+{"id": "smoke-js", "category": "js_heavy", "url": "https://quotes.toscrape.com/js/", "question": "Who is the author of the first quote on the page?", "expected_answer": "Albert Einstein", "check_type": "contains"}

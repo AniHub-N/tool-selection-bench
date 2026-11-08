@@ -1,0 +1,2 @@
+{"model": "flash", "id": "gemini/gemini-3.8-flash", "reply": "OK", "usage": {"in": 8, "out": 59}, "list_usd": 0.00022725, "error": null}
+{"model": "flash-lite", "id": "gemini/gemini-3.5-flash-lite", "reply": "OK", "usage": {"in": 8, "out": 1}, "list_usd": 4.9e-06, "error": null}

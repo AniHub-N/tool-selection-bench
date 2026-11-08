@@ -1,0 +1,28 @@
+{
+  "gemini": {
+    "flash": {
+      "day": "2026-11-07",
+      "requests": 1,
+      "tokens_in": 8,
+      "tokens_out": 59
+    },
+    "flash-lite": {
+      "day": "2026-11-07",
+      "requests": 1,
+      "tokens_in": 8,
+      "tokens_out": 1
+    }
+  },
+  "firecrawl_scrape": {
+    "2026-11": 1.0
+  },
+  "tinyfish_fetch": {
+    "2026-11-08": 1
+  },
+  "tinyfish_agent": {
+    "usd": 0.0,
+    "steps": 0,
+    "calls": 1
+  },
+  "list_usd_total": 0.005232
+}

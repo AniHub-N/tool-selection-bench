@@ -30,6 +30,8 @@ def cmd_smoke(args: argparse.Namespace) -> int:
     request per Gemini model to confirm the key and model IDs work."""
     cfg = load_config()
     tasks = load_tasks(Path(args.tasks))
+    if args.task:
+        tasks = [t for t in tasks if t["id"] in args.task]
     tools, skipped = load_tools(cfg)
     for s in skipped:
         print(f"[skip] {s}")
@@ -101,6 +103,7 @@ def main(argv: list[str] | None = None) -> int:
     s = sub.add_parser("smoke", help="run each tool directly on the smoke URLs, plus a Gemini ping")
     s.add_argument("--tasks", default=str(TASKS_DIR / "smoke.jsonl"))
     s.add_argument("--new", action="store_true", help="start a fresh run instead of resuming")
+    s.add_argument("--task", action="append", help="only run this task id (repeatable)")
     s.add_argument("--no-llm", action="store_true", help="skip the Gemini check")
     s.set_defaults(func=cmd_smoke)
 

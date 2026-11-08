@@ -125,3 +125,22 @@ Worst case is 4 LLM requests per task-run (3 tool calls + final answer).
 At the placeholder Flash limit (225 usable/day) that is about 11 days for Flash alone. Options to
 decide in Phase 3: 1 rep for ablations, ablate only Flash-Lite, or use the real (possibly higher)
 RPD from AI Studio. Resume makes multi-day runs workable either way.
+
+## First live smoke (2026-11-08, 1 URL: quotes.toscrape.com/js/)
+
+Kept to one URL to save quota.
+
+- plain_fetch: 60 chars of page chrome, no quotes (expected: no JS).
+- firecrawl_scrape: 1,505 chars, quotes present, 1 credit.
+- tinyfish_fetch: 1,100 chars, quotes present. Fetch renders JS too.
+- **tinyfish_agent: refused with HTTP 403 `FORBIDDEN: Your account is not enabled for custom max
+  steps yet. Join the beta program at /beta`.** Setting `agent_config.max_steps` is a beta
+  feature. No steps were run and the wallet was not charged. Unresolved; see below.
+- Both Gemini models replied "OK". Flash used 59 output tokens for a one-word reply (thinking
+  tokens), while Flash-Lite used 1. Thinking tokens will dominate Flash's list-price cost; consider
+  a low reasoning effort for the agent loop.
+- LiteLLM warns that `temperature` is deprecated for Gemini 3+ ("planned for removal"). It still
+  works. If it's removed, determinism will rest on the seed and repeated runs only.
+- Live balances: Firecrawl reports 1,400 remaining credits (plan 1,000; presumably signup
+  bonus credits). The local 800-credit stop still applies. The TinyFish wallet shows $9.00, not $8.
+- Quota ledger day for Gemini is the Pacific date (2026-11-07 at 05:41 UTC), as intended.

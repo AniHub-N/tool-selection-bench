@@ -50,17 +50,46 @@ def check(task: dict[str, Any], answer: str | None) -> bool | None:
     raise ValueError(f"unknown check_type {ct}")
 
 
-def evidence_present(task: dict[str, Any], content: str, tool_name: str | None = None) -> bool | None:
+_AUTHOR_MD = re.compile(r"[”\"]\s*by\s+([^\n\[\]]+?)(?=\s*(?:\[\(about\)|\n|$))")
+_AUTHOR_JSON = re.compile(r'"name"\s*:\s*"([^"]+)"')
+
+
+def ordered_authors(content: str) -> list[str]:
+    """quotes.toscrape author names in page order, from any tool's rendering: markdown
+    ('”by Name [(about)]', '”\\nby Name\\n', '”by Name\\n\\n') or the /api/quotes JSON."""
+    c = content or ""
+    if c.lstrip().startswith("{"):
+        try:
+            return [q["author"]["name"] for q in json.loads(c).get("quotes", [])]
+        except (json.JSONDecodeError, KeyError, TypeError, AttributeError):
+            return _AUTHOR_JSON.findall(c)
+    return [m.strip().strip("*").strip() for m in _AUTHOR_MD.findall(c)]
+
+
+def _position_ok(pos: dict[str, Any], content: str, url: str | None) -> bool:
+    if not url or not any(re.search(p, url.strip()) for p in pos["urls"]):
+        return False  # not the page the question asks about
+    names = ordered_authors(content)
+    i = pos["index"]
+    idx = i - 1 if i > 0 else i
+    return -len(names) <= idx < len(names) and re.search(pos["name"], names[idx]) is not None
+
+
+def evidence_present(task: dict[str, Any], content: str, tool_name: str | None = None,
+                     url: str | None = None) -> bool | None:
     """Oracle definition of "this tool can solve this task": is the answer present in this RAW
-    tool output? None = presence can't decide it (aggregate answers, or a judge task with no
-    evidence pattern). The browser agent's output is an answer, not a page, so it is checked
-    like one."""
+    tool output? None = presence can't decide it (aggregate answers -> hand labels, or a judge
+    task with no evidence pattern). The browser agent's output is an answer, not a page, so it
+    is checked like one. Position tasks also need the right URL and the name at the asked
+    position (`url` = the URL this output was fetched from)."""
     ev = task.get("evidence") or {}
     if tool_name == "tinyfish_agent":
         return check(task, content) if task["check_type"] != "judge" else (
             all(re.search(p, content or "", re.I) for p in ev["all"]) if ev.get("all") else None)
     if ev.get("aggregate"):
         return None
+    if ev.get("position"):
+        return _position_ok(ev["position"], content, url)
     if ev.get("all"):
         return all(re.search(p, content or "", re.I) for p in ev["all"])
     return check(task, content)

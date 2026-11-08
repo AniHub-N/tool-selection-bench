@@ -43,3 +43,14 @@ def test_changed_tasks_file_blocks_resume(tmp_path):
     tasks.write_text('{"id": "b"}\n')
     with pytest.raises(ResumeConflict):
         RunDir.start("flash", "free", runs_dir=tmp_path, tasks_path=tasks)
+
+
+def test_annotation_edits_do_not_block_resume(tmp_path):
+    tasks = tmp_path / "tasks.jsonl"
+    tasks.write_text('{"id": "a", "question": "q"}\n')
+    r1 = RunDir.start("flash", "oracle", runs_dir=tmp_path, tasks_path=tasks)
+    tasks.write_text('{"id": "a", "question": "q", "evidence": {"all": ["x"]}, "memorized": true}\n')
+    assert RunDir.start("flash", "oracle", runs_dir=tmp_path, tasks_path=tasks).path == r1.path
+    tasks.write_text('{"id": "a", "question": "q2"}\n')
+    with pytest.raises(ResumeConflict):
+        RunDir.start("flash", "oracle", runs_dir=tmp_path, tasks_path=tasks)

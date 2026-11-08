@@ -73,3 +73,68 @@ def test_table_shows_both_verdicts(tmp_path):
     assert "| s1 | static | Y fail | - |" in t and "| i1 | interactive | - | Y PASS | url_nav |" in t
     assert "s1/plain" in t.split("Extraction misses")[1].splitlines()[0]
     assert "$0.048" in t
+
+
+# ---- position tasks: right URL AND the name at the asked position ---------------
+
+MD_PAGE = ("“q1”\nby Albert Einstein\n[(about)](/author/A)\n\n“q2”by J.K. Rowling [(about)](x)\n\n"
+           "“q3”by Jane Austen\n\nTags: x\n")
+
+
+def test_ordered_authors_all_renderings():
+    from bench.scoring import ordered_authors
+    assert ordered_authors(MD_PAGE) == ["Albert Einstein", "J.K. Rowling", "Jane Austen"]
+    js = '{"quotes":[{"author":{"name":"Albert Einstein"}},{"author":{"name":"Andr\u00e9 Gide"}}]}'
+    assert ordered_authors(js) == ["Albert Einstein", "André Gide"]
+
+
+def _page(names):
+    return "\n\n".join(f"“q{i}”by {n}" for i, n in enumerate(names)) + "\n"
+
+
+def test_position_needs_right_url_and_position():
+    j02 = TASKS_FILE["j02"]
+    names = ["A", "B", "A", "C", "D", "A", "André Gide", "E"]
+    good = "https://quotes.toscrape.com/js-delayed/"
+    assert evidence_present(j02, _page(names), "firecrawl_scrape", good) is True
+    # same data fetched from the homepage: wrong page, no credit
+    assert evidence_present(j02, _page(names), "firecrawl_scrape", "https://quotes.toscrape.com/") is False
+    # right page, but the name is elsewhere (6th, not 7th)
+    names2 = ["A", "B", "A", "C", "D", "André Gide", "X", "E"]
+    assert evidence_present(j02, _page(names2), "firecrawl_scrape", good) is False
+    # right page that never rendered the quotes
+    assert evidence_present(j02, "# Quotes to Scrape\n\nLogin", "plain_fetch", good) is False
+
+
+def test_position_last_and_first():
+    j10, i04 = TASKS_FILE["j10"], TASKS_FILE["i04"]
+    p2 = "https://quotes.toscrape.com/js/page/2/"
+    assert evidence_present(j10, _page(["X", "Y", "Allen Saunders"]), "tinyfish_fetch", p2) is True
+    assert evidence_present(j10, _page(["Allen Saunders", "Y"]), "tinyfish_fetch", p2) is False
+    for url in ("https://quotes.toscrape.com/page/4/", "https://quotes.toscrape.com/js/page/4",
+                "https://quotes.toscrape.com/api/quotes?page=4"):
+        content = (_page(["Dr. Seuss", "Z"]) if "api" not in url
+                   else '{"quotes":[{"author":{"name":"Dr. Seuss"}}]}')
+        assert evidence_present(i04, content, "plain_fetch", url) is True, url
+    assert evidence_present(i04, _page(["Dr. Seuss"]), "plain_fetch", "https://quotes.toscrape.com/page/3/") is False
+
+
+def test_can_solve_passes_call_url(tmp_path):
+    j10 = TASKS_FILE["j10"]
+    r = make_row(tmp_path, j10, "firecrawl_scrape", [_page(["X", "Allen Saunders"])], correct=True)
+    r["tool_calls"][0]["args"] = {"url": "https://quotes.toscrape.com/js/"}  # page 1, wrong
+    assert can_solve(r, j10) is False
+    r["tool_calls"][0]["args"] = {"url": "https://quotes.toscrape.com/js/page/2/"}
+    assert can_solve(r, j10) is True
+
+
+# ---- hand labels for aggregate tasks ---------------------------------------------
+
+def test_hand_label_used_only_for_the_exact_raw_outputs(tmp_path):
+    t = TASKS_FILE["i09"]
+    r = make_row(tmp_path, t, "firecrawl_scrape", ["humor page 1", "humor page 2"], True)
+    refs = [c["raw_ref"] for c in r["tool_calls"]]
+    labels = {"i09": {"firecrawl_scrape": {"can": True, "hand_labeled": True, "raw_refs": refs, "note": "x"}}}
+    assert can_solve(r, t, labels) is True
+    stale = {"i09": {"firecrawl_scrape": {"can": True, "hand_labeled": True, "raw_refs": ["raw/old.txt"]}}}
+    assert can_solve(r, t, stale) is None   # cell was re-run: label no longer applies

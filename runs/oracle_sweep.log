@@ -1,24 +1,68 @@
 [quota] preflight for oracle flash-lite: 130 task x tool cells
-[quota]   firecrawl live: 1399 credits remaining (plan 1000, period ends 2026-11-29T13:41:58.019Z)
+[quota]   firecrawl live: 1395 credits remaining (plan 1000, period ends 2026-11-29T13:41:58.019Z)
 [quota]   tinyfish live: wallet $10.95
 [quota]   resource                estimate      used   stop at
 [quota]   plain_fetch                    0         0         -
-[quota]   firecrawl_scrape             230         1       800
-[quota]   tinyfish_fetch                40         1       900
+[quota]   firecrawl_scrape             230         5       800
+[quota]   tinyfish_fetch                40         5       900
 [quota]   tinyfish_agent               0.8     0.048       6.0
-[quota]   gemini:flash-lite            520        11       900
-[quota]   gemini:flash                  15         3        18
-[quota]   list-price total so far: $0.0943 (actual spend: $0)
-[run] new run 20261108T125103Z_flash-lite_oracle
-PASS s01 plain_fetch       calls=1  | The UPC of the book "A Light in the Attic" is **a897fe39b1053632**.
-PASS s01 firecrawl_scrape  calls=1  | The UPC of this book is **a897fe39b1053632**.
-PASS s01 tinyfish_fetch    calls=1  | The UPC of this book is **a897fe39b1053632**.
-PASS s02 plain_fetch       calls=1  | There are **20** copies of this book listed as available.
-PASS s02 firecrawl_scrape  calls=1  | There are **20** copies of this book listed as available.
-PASS s02 tinyfish_fetch    calls=1  | There are **20** copies of this book listed as available.
-PASS s03 plain_fetch       calls=1  | The page lists the population of Anguilla as **13254**.
-PASS s03 firecrawl_scrape  calls=1  | The page lists a population of **13254** for Anguilla.
-PASS s03 tinyfish_fetch    calls=1  | The page lists a population of **13254** for Anguilla.
-PASS s04 plain_fetch       calls=1  | For SQLite versions after 3.32.0, the default value of `SQLITE_MAX_VAR
-PASS s04 firecrawl_scrape  calls=1  | For SQLite versions after 3.32.0, the default value of `SQLITE_MAX_VAR
-PASS s04 tinyfish_fetch    calls=1  | For SQLite versions after 3.32.0, the default value of `SQLITE_MAX_VAR
+[quota]   gemini:flash-lite            520        37       900
+[quota]   gemini:flash                  15         4        18  <- will pause partway; rerun the same command to resume
+[quota]   list-price total so far: $0.1349 (actual spend: $0)
+[run] new run 20261108T125742Z_flash-lite_oracle
+can=Y ext=PASS s01 plain_fetch       calls=1  | The UPC of the book "A Light in the Attic" is **a897fe39b105
+can=Y ext=PASS s01 firecrawl_scrape  calls=1  | The UPC of this book is **a897fe39b1053632**.
+can=Y ext=PASS s01 tinyfish_fetch    calls=1  | The UPC of this book is **a897fe39b1053632**.
+can=Y ext=PASS s02 plain_fetch       calls=1  | There are **20** copies of this book listed as available.
+can=Y ext=PASS s02 firecrawl_scrape  calls=1  | There are **20** copies of this book listed as available.
+can=Y ext=PASS s02 tinyfish_fetch    calls=1  | There are **20** copies of this book listed as available.
+can=Y ext=PASS s03 plain_fetch       calls=1  | The page lists the population of Anguilla as **13254**.
+can=Y ext=PASS s03 firecrawl_scrape  calls=1  | The page lists a population of **13254** for Anguilla.
+can=Y ext=PASS s03 tinyfish_fetch    calls=1  | The page lists a population of **13254** for Anguilla.
+can=Y ext=PASS s04 plain_fetch       calls=1  | For SQLite versions after 3.32.0, the default value of `SQLI
+can=Y ext=PASS s04 firecrawl_scrape  calls=1  | For SQLite versions after 3.32.0, the default value of `SQLI
+can=Y ext=PASS s04 tinyfish_fetch    calls=1  | For SQLite versions after 3.32.0, the default value of `SQLI
+can=Y ext=PASS s05 plain_fetch       calls=1  | In the SQLite database file header, the 2-byte field at offs
+can=Y ext=PASS s05 firecrawl_scrape  calls=1  | According to the SQLite database file format specification, 
+can=Y ext=PASS s05 tinyfish_fetch    calls=1  | In the SQLite database file header, the 2-byte field at offs
+can=Y ext=PASS s06 plain_fetch       calls=1  | In PostgreSQL 16, the scale in a `numeric` type declaration 
+can=Y ext=PASS s06 firecrawl_scrape  calls=1  | In PostgreSQL 16, the permitted range for the scale in a `nu
+can=Y ext=PASS s06 tinyfish_fetch    calls=1  | In PostgreSQL 16, the scale in a `numeric` type declaration 
+can=Y ext=PASS s07 plain_fetch       calls=1  | According to Table 8.9 ("Date/Time Types") in the PostgreSQL
+can=Y ext=PASS s07 firecrawl_scrape  calls=1  | According to Table 8.9 ("Date/Time Types") in the PostgreSQL
+can=Y ext=PASS s07 tinyfish_fetch    calls=1  | According to PostgreSQL documentation (Table 8.9 "Date/Time 
+can=Y ext=PASS s08 plain_fetch       calls=1  | According to the table, the Boston Bruins had **44** wins in
+can=Y ext=PASS s08 firecrawl_scrape  calls=1  | According to the table, the Boston Bruins had **44** wins in
+can=Y ext=PASS s08 tinyfish_fetch    calls=1  | According to the table, the Boston Bruins had **44** wins in
+can=Y ext=PASS s09 plain_fetch       calls=1  | Based on the passage, the name of the blacksmith is **Perth*
+can=Y ext=PASS s09 firecrawl_scrape  calls=1  | The name of the blacksmith in the passage is **Perth**.
+can=Y ext=PASS s09 tinyfish_fetch    calls=1  | The name of the blacksmith in the passage is **Perth**.
+can=Y ext=PASS s10 plain_fetch       calls=1  | HTCPCP/1.0 defines the **`Accept-Additions`** request header
+can=Y ext=PASS s10 firecrawl_scrape  calls=1  | HTCPCP/1.0 (RFC 2324) defines the **`Accept-Additions`** req
+can=Y ext=PASS s10 tinyfish_fetch    calls=1  | HTCPCP/1.0 (RFC 2324) defines the **`Accept-Additions`** req
+can=Y ext=PASS j01 plain_fetch       calls=2  | The tags attached to the Jane Austen quote (“The person, be 
+can=Y ext=PASS j01 firecrawl_scrape  calls=1  | The tags attached to the Jane Austen quote on that page are:
+can=n ext=fail j01 tinyfish_fetch    calls=3  | 
+can=n ext=PASS j02 plain_fetch       calls=2  | The author of the 7th quote on the page is **André Gide**.
+can=Y ext=PASS j02 firecrawl_scrape  calls=2  | The author of the 7th quote on the page is **André Gide**.  
+can=Y ext=PASS j02 tinyfish_fetch    calls=2  | The author of the 7th quote on the page is **André Gide**.
+can=n ext=fail j03 plain_fetch       calls=3  | 
+can=n ext=fail j03 firecrawl_scrape  calls=3  | 
+can=n ext=fail j03 tinyfish_fetch    calls=3  | 
+can=n ext=fail j04 plain_fetch       calls=3 err:http_404 | 
+can=Y ext=PASS j04 firecrawl_scrape  calls=1  | The price of the Grayson Crewneck Sweatshirt on this page is
+can=Y ext=PASS j04 tinyfish_fetch    calls=1  | The price of the Grayson Crewneck Sweatshirt on this page is
+can=Y ext=PASS j05 plain_fetch       calls=2  | The price of the Kenobi Trail Jacket is **$47.00**.
+can=Y ext=PASS j05 firecrawl_scrape  calls=2  | The price of the Kenobi Trail Jacket is **$47.00**.
+can=n ext=fail j05 tinyfish_fetch    calls=3  | 
+can=n ext=PASS j06 plain_fetch       calls=2  | According to the data source for this table, Airi Satou's st
+can=n ext=PASS j06 firecrawl_scrape  calls=2  | Airi Satou's start date in the table is **2008-11-28**.
+can=n ext=PASS j06 tinyfish_fetch    calls=2  | Airi Satou's start date in the table is **2008-11-28**.
+can=n ext=PASS j07 plain_fetch       calls=2  | Caesar Vance's start date in the table is **12th Dec 11**.
+can=n ext=PASS j07 firecrawl_scrape  calls=1  | Caesar Vance's start date in the table is **12th Dec 11**.
+can=n ext=PASS j07 tinyfish_fetch    calls=2  | Caesar Vance's start date in the table is **12th Dec 11**.
+can=Y ext=PASS j08 plain_fetch       calls=2 err:empty_content | According to the Swagger Petstore API description, you can u
+can=Y ext=PASS j08 firecrawl_scrape  calls=1  | According to the API description on the page, you can use th
+can=Y ext=PASS j08 tinyfish_fetch    calls=1  | According to the page, you can use the API key `special-key`
+can=? ext=PASS j09 plain_fetch       calls=2 err:empty_content | There are **4** operations listed under the 'store' tag on t
+can=? ext=PASS j09 firecrawl_scrape  calls=1  | Based on the page, there are **4** operations listed under t

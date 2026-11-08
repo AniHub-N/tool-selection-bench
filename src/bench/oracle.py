@@ -87,21 +87,38 @@ def cells_for(tasks: list[dict], tools: list, cfg: dict) -> list[tuple[dict, Any
             if tool.name != "tinyfish_agent" or t["category"] in agent_cats]
 
 
-def can_solve(row: dict, task: dict) -> bool | None:
-    """The oracle verdict: answer present in ANY raw output of this cell. None = undecidable."""
+HAND_LABELS = ROOT / "tasks" / "oracle_hand_labels.json"
+
+
+def hand_label(row: dict, labels: dict | None = None) -> dict | None:
+    """A hand label for this cell, valid only if it was made from exactly these raw outputs."""
+    if labels is None:
+        import json
+        labels = json.loads(HAND_LABELS.read_text(encoding="utf-8")) if HAND_LABELS.exists() else {}
+    lab = labels.get(row["task_id"], {}).get(row["tool"])
+    refs = sorted(c["raw_ref"] for c in row.get("tool_calls") or [] if c.get("raw_ref"))
+    if lab and lab.get("hand_labeled") and sorted(lab.get("raw_refs", [])) == refs:
+        return lab
+    return None
+
+
+def can_solve(row: dict, task: dict, labels: dict | None = None) -> bool | None:
+    """The oracle verdict: answer present in ANY raw output of this cell. None = undecidable
+    (aggregate tasks without a valid hand label)."""
     from .scoring import evidence_present
+    if (task.get("evidence") or {}).get("aggregate") and row["tool"] != "tinyfish_agent":
+        lab = hand_label(row, labels)
+        return lab["can"] if lab else None
     verdicts = []
     for c in row.get("tool_calls") or []:
         ref = c.get("raw_ref")
         if not ref or not c.get("ok"):
             continue
         content = (Path(row["_run_path"]) / ref).read_text(encoding="utf-8", errors="replace")
-        verdicts.append(evidence_present(task, content, c.get("tool")))
+        verdicts.append(evidence_present(task, content, c.get("tool"), str((c.get("args") or {}).get("url", ""))))
     if any(v is True for v in verdicts):
         return True
     if verdicts and all(v is None for v in verdicts):
-        return None
-    if not verdicts and (task.get("evidence") or {}).get("aggregate") and row["tool"] != "tinyfish_agent":
         return None
     return False
 
@@ -188,6 +205,8 @@ def cell(row: dict | None, task: dict) -> str:
         return "ERR"
     ext = {True: "PASS", False: "fail", None: "pend"}[row["score"]["correct"]]
     s = f"{_yn(can_solve(row, task))} {ext}"
+    if hand_label(row):
+        s += " H"
     calls = row.get("tool_calls") or []
     if any(x.get("blocked") for x in calls):
         s += " B"
@@ -218,7 +237,8 @@ def oracle_table(rows: list[dict], tasks: list[dict]) -> str:
             fl.append("url_nav" if t.get("url_navigable") else "not_url_nav")
         cells = " | ".join(cell(by.get((t["id"], tl)), t) for tl in tools)
         out.append(f"| {t['id']} | {t['category']} | {cells} | {', '.join(fl)} |")
-    out.append("\nFlags: B = bot/challenge page seen, E = a tool call errored, T = output truncated to "
+    out.append("\nFlags: H = `can` hand-labeled from the saved raw outputs (tasks/oracle_hand_labels.json), "
+               "B = bot/challenge page seen, E = a tool call errored, T = output truncated to "
                "max_content_chars before the model saw it, F? = format_suspect (hand-review).\n")
 
     def rate(tl, cat, fn):

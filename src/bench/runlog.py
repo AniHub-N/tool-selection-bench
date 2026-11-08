@@ -34,6 +34,20 @@ def experiment_hash(config_path: Path = CONFIG_PATH) -> str:
     return hashlib.sha256(json.dumps(cfg, sort_keys=True).encode()).hexdigest()[:12]
 
 
+# Fields that change what a run measures. Annotations (evidence patterns, memorized flags,
+# url_navigable, notes) are analysis-only, so editing them must not block resuming a run.
+TASK_CORE = ("id", "category", "url", "question", "expected_answer", "check_type", "pattern", "value")
+
+
+def tasks_hash(tasks_path: Path) -> str:
+    core = []
+    for line in Path(tasks_path).read_text(encoding="utf-8").splitlines():
+        if line.strip():
+            t = json.loads(line)
+            core.append({k: t[k] for k in TASK_CORE if k in t})
+    return hashlib.sha256(json.dumps(core, sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:12]
+
+
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
@@ -60,7 +74,7 @@ class RunDir:
         safe_model = re.sub(r"[^A-Za-z0-9.-]+", "-", model)
         h = experiment_hash()
         if tasks_path is not None:  # task edits must also block resuming (questions changed)
-            h += "-" + hashlib.sha256(Path(tasks_path).read_bytes()).hexdigest()[:12]
+            h += "-" + tasks_hash(Path(tasks_path))
         if resume:
             for p in sorted(runs_dir.glob(f"*_{safe_model}_{mode}"), reverse=True):
                 meta = json.loads((p / "meta.json").read_text())

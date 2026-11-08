@@ -378,3 +378,17 @@ check and writes `tasks/plain_visibility.json`.
 - Oracle rows merge on the config hash + each task's current question, not the task-file hash,
   so editing evidence patterns afterwards doesn't orphan results.
 - Patterns are validated by hand against the saved raw outputs once the sweep is done.
+- **Counting tasks are hand-labeled, not left as `?`** (i09, j09 × the 3 fetch tools = 6 cells).
+  `can` comes from reading the saved raw outputs; labels live in tasks/oracle_hand_labels.json with
+  `hand_labeled: true`, a note, and the exact `raw_refs` they were made from. If a cell is re-run
+  (different raw outputs) the label no longer applies and the cell reverts to `?`. Cells show `H`.
+- **Position tasks tightened** (j02, j10, i04): `can` = the right page was fetched (the call's URL)
+  AND the name sits at the asked position in that output's ordered author list
+  (`scoring.ordered_authors` handles plain/Firecrawl/TinyFish markdown and the /api/quotes JSON).
+  "this page" (j02, j10) = exactly the task URL; "page 4 of this site" (i04) = any view of page 4
+  (HTML, /js/, /js-delayed/, `/api/quotes?page=4`). Seen in the raw outputs: on j02 several cells
+  fetched `/` or `/api/quotes`, which hold the same page-1 data, and the old presence check would
+  have credited them. Now they get no credit.
+- Run resume hashes only result-affecting task fields (`runlog.TASK_CORE`: id, category, url,
+  question, expected_answer, check_type, pattern, value). Annotation edits (evidence, flags) no
+  longer block resuming.

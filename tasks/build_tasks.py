@@ -263,6 +263,16 @@ EVIDENCE = {
     "i07": {"all": [r"Zenaida Frank[\s\S]{0,400}?\b7439\b"]},
     "i08": {"all": [r"Zorita Serrano[^\n]{0,300}(?:2012[/-]0?6[/-]0?1|1st Jun 12)"]},
     "i09": {"aggregate": "count of quotes tagged humor across pages"},
+    # Position questions: the right page must have been fetched (URL) AND the name must sit at the
+    # asked position in that output's ordered author list. "this page" = exactly that URL; "page 4
+    # of this site" = any view of the site's page 4 (HTML, /js/, /js-delayed/, or the JSON API).
+    "j02": {"position": {"urls": [r"^https?://quotes\.toscrape\.com/js-delayed/?(?:page/1/?)?$"],
+                         "index": 7, "name": r"^Andr[eé] Gide$"}},
+    "j10": {"position": {"urls": [r"^https?://quotes\.toscrape\.com/js/page/2/?$"],
+                         "index": -1, "name": r"^Allen Saunders$"}},
+    "i04": {"position": {"urls": [r"^https?://quotes\.toscrape\.com/(?:js/|js-delayed/)?page/4/?$",
+                                  r"^https?://quotes\.toscrape\.com/api/quotes\?page=4$"],
+                         "index": 1, "name": r"^Dr\. Seuss$"}},
     "i10": {"all": ["Geo Insulated Jogging Pant" + PRICE % "51"]},
 }
 

@@ -1,7 +1,8 @@
 """Thin LiteLLM wrapper: quota check, rate limit, 429 backoff, usage + list-price cost.
 
-Only Gemini models from config.toml are ever called. Other provider keys in the
-environment (e.g. OPENAI_API_KEY) are never used.
+Only models listed in config.toml are called: Gemini (GEMINI_API_KEY) and NVIDIA build
+(api_base + key read explicitly from api_key_env). Other provider keys in the environment
+(e.g. OPENAI_API_KEY) are never used.
 """
 
 from __future__ import annotations
@@ -16,7 +17,7 @@ os.environ.setdefault("LITELLM_LOCAL_MODEL_COST_MAP", "True")
 
 import litellm  # noqa: E402
 
-from .quota import Quota, QuotaPaused  # noqa: E402
+from .quota import Quota, QuotaPaused, llm_resource  # noqa: E402
 from .ratelimit import retry_call  # noqa: E402
 
 litellm.telemetry = False
@@ -33,18 +34,36 @@ def _retry_hint(e: Exception) -> float | None:
                           litellm.InternalServerError, litellm.APIConnectionError)):
         return None
     msg = str(e)
+    if re.search(r"insufficient (?:credit|balance)|out of credits|credits? (?:exhausted|depleted)", msg, re.I):
+        raise QuotaPaused(f"provider credits exhausted (server-side): {msg[:300]}") from e
     if isinstance(e, litellm.RateLimitError) and re.search(r"PerDay|per day", msg, re.I):
         raise QuotaPaused(f"Gemini daily quota exhausted (server-side): {msg[:300]}") from e
     m = re.search(r'retryDelay"?\s*[:=]\s*"?(\d+(?:\.\d+)?)s', msg)
     return float(m.group(1)) if m else 0.0
 
 
+def api_key(m: dict[str, Any]) -> str | None:
+    """The model's API key, or None if unset (then the model is skipped)."""
+    names = m.get("api_key_env") or ["GEMINI_API_KEY"]
+    for n in ([names] if isinstance(names, str) else names):
+        if os.environ.get(n):
+            return os.environ[n]
+    return None
+
+
+def provider_kwargs(m: dict[str, Any]) -> dict[str, Any]:
+    """Explicit api_base/api_key for non-Gemini providers, so LiteLLM never falls back to other env keys."""
+    if m.get("provider") != "nvidia":
+        return {}
+    return {"api_base": m["api_base"], "api_key": api_key(m)}
+
+
 def complete(name: str, cfg: dict[str, Any], quota: Quota, messages: list[dict],
              tools: list[dict] | None = None, tool_choice: str | None = None) -> dict[str, Any]:
     """One chat completion. Returns {message, usage: {in, out}, list_usd, model}."""
     m = cfg["models"][name]
-    resource = f"gemini:{name}"
-    extra: dict[str, Any] = {}
+    resource = llm_resource(cfg, name)
+    extra: dict[str, Any] = provider_kwargs(m)
     if tools:
         extra["tools"] = tools
         if tool_choice:

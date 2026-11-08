@@ -274,3 +274,46 @@ check and writes `tasks/plain_visibility.json`.
 - A quoting slip in a scripted edit put a literal newline into a string in cli.py, which only
   showed up when the CLI was run. Added `tests/test_cli.py` (imports the CLI and parses every
   subcommand) so a broken CLI fails the test suite.
+
+## Answer-format tolerance (2026-11-08)
+
+- Many references have several valid formats (j07 "12th Dec 11" = 2011-12-12, p09 2.1×10^6 =
+  2.1e6 = 2,100,000, s06 "-1000 to 1000"). A format miss would be scored as a failure and read
+  as a tool failure. Fix: `src/bench/normalize.py` plus a `value` field on 26 numeric/date/range
+  tasks. A task passes if the value matches in any format **or** the original regex/contains
+  passes, so this can only remove false fails. tests/test_normalize.py checks both directions
+  (right value in another format passes; wrong value in the right format fails).
+- Number matching is exact up to float rounding: it tolerates format, not precision.
+- Text `contains` checks ignore accents and punctuation ("Andre Gide", "Dr Seuss"), but only for
+  references without digits: stripping the "." would make 60.5 match 6.05.
+- A failed deterministic check whose answer still contains the reference's letters and digits is
+  marked `format_suspect` in the score. Those rows get a hand review (label CLI) and are never
+  silently counted as tool failures.
+- Found while writing the tests: the money regexes (`\$\s?64(\.00)?\b`) accepted "$64.50".
+  Tightened to `(?:\.00)?(?!\.?\d)`.
+- **Re-scoring the existing no_tools runs (free, deterministic) changed one verdict.** Flash-Lite
+  answered j06 "**28th Nov 08**", the site's own format, which the old ISO-only regex rejected.
+  So j06 is memorized as well, and js_heavy now has 2 non-known_answer memorized tasks (j06, j07,
+  both from the DataTables sample data, which Flash-Lite appears to know wholesale).
+
+## Second main model: NVIDIA build (2026-11-08)
+
+- Mistral's free Experiment plan now requires payment, so the decision moved to NVIDIA
+  build.nvidia.com trial credits (key in .env as `NVIDIA_KEY`; `NVIDIA_API_KEY` also accepted).
+- `GET /v1/models` (free) lists 84 models. **Neither Llama 3.3 70B nor gpt-oss-120b is listed.**
+  Only `openai/gpt-oss-20b` is from the gpt-oss family.
+- First pick was `nvidia/nemotron-3-super-120b-a12b` (largest listed, card says "Function
+  Calling: Supported"). The one tool-check request returned **404 "Function ... Not found for
+  account"**: the model is listed but not deployed for this account. Listing ≠ access.
+- Credits: the ledger counts 1 credit per request *attempt* (conservative; NVIDIA has no balance
+  API we can call), shared by every provider="nvidia" model, all-time, stop at 900 of 1,000.
+- NVIDIA models are called with an explicit `api_base` and `api_key` (`llm.provider_kwargs`), so
+  LiteLLM never picks up another provider's key from the environment.
+- Reduced plan for the NVIDIA model: no_tools + free ×2 + one ablation (anonymized names).
+  Rough budget: 40 + 2×40×≤4 + 40×≤4 = ≤520 requests (incl. retries well under 900).
+- **Outcome: NVIDIA unusable on 2026-11-08, so the fallback applies.** 7 attempts, 0 answers:
+  nemotron-3-super-120b-a12b, kimi-k2.6, mistral-large-2-instruct → 404 not found for account;
+  deepseek-v4.1-flash, gpt-oss-20b → 504, then no reply within 150 s. All 7 are counted in the
+  ledger. **Flash-Lite is the only main model; the README must say "Gemini family only".** The
+  NVIDIA wiring stays (pointed at gpt-oss-20b) so `python -m bench tool-check --model nemotron`
+  can retry it; if it passes, it joins on the reduced plan.

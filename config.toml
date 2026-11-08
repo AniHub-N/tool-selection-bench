@@ -47,6 +47,19 @@ id = "gemini/gemini-3.5-flash-lite"
 usd_per_mtok_in = 0.30
 usd_per_mtok_out = 2.50
 
+# NVIDIA build.nvidia.com free credits (OpenAI-compatible). NOT A MAIN MODEL (2026-11-08): Llama
+# 3.3 70B / gpt-oss-120b aren't listed; nemotron-3-super, kimi-k2.6 and mistral-large-2 return
+# 404 "not found for account"; gpt-oss-20b and deepseek-v4.1-flash timed out (504 / no reply in
+# 150 s). Kept wired to gpt-oss-20b, the only reachable candidate, for a later retry:
+#   python -m bench tool-check --model nemotron
+[models.nemotron]
+id = "nvidia_nim/openai/gpt-oss-20b"
+provider = "nvidia"
+api_base = "https://integrate.api.nvidia.com/v1"
+api_key_env = ["NVIDIA_API_KEY", "NVIDIA_KEY"]
+usd_per_mtok_in = 0.03      # approx. OpenRouter list price for gpt-oss-20b; re-check if it is ever used
+usd_per_mtok_out = 0.15
+
 # ---------------------------------------------------------------------------
 # Free-quota limits. Excluded from the run's config hash, so editing these
 # does not block resuming a run.
@@ -66,8 +79,15 @@ rpm = 15
 rpd = 1000
 stop_frac = 0.9
 
+# NVIDIA trial credits: shared by every provider="nvidia" model, all-time (they don't reset).
+# Counted as 1 credit per request attempt (conservative; NVIDIA has no balance API we can call).
+[quota.nvidia]
+rpm = 40
+free_credits = 1000
+stop_at = 900
+
 [quota.firecrawl_scrape]
-rpm = 10                    # free plan: 10 scrapes/min, 2 concurrent (we run serially)
+rpm = 10                   # free plan: 10 scrapes/min, 2 concurrent (we run serially)
 free_credits = 1000         # per billing month
 stop_at = 800               # pause once 800 credits are used this month
 
@@ -90,5 +110,10 @@ model = "flash"
 
 [experiment]
 # Main model pair (decision 2026-11-08). Flash is a side run (1 rep free choice, no ablations).
-# Second main model pending: Llama 4 Scout was shut down on Groq (see NOTES.md).
+# Decision 2026-11-08: Scout (Groq) is shut down, Mistral's free plan is gone, and NVIDIA was
+# unusable (see NOTES.md), so per the fallback Flash-Lite is the ONLY main model. Flash is a side
+# run (1 rep free choice, no ablations). The README must state "Gemini family only".
+# If NVIDIA starts working: add "nemotron" here; it gets the reduced plan
+# (no_tools + free x2 + one ablation: anonymized names).
 main_models = ["flash-lite"]
+reduced_plan_models = ["nemotron"]

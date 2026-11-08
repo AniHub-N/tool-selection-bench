@@ -7,6 +7,8 @@ import re
 from typing import Any, Callable
 from urllib.parse import urlsplit
 
+from .normalize import loose, value_match
+
 JUDGE_PROMPT = """You are grading an answer to a factual question about a specific web page or document.
 
 Question: {question}
@@ -32,13 +34,28 @@ def check(task: dict[str, Any], answer: str | None) -> bool | None:
         return None
     if not a:
         return False
+    # A correct value in another format (2.1e6 vs 2.1×10^6, 2011-12-12 vs "12th Dec 11") passes.
+    if task.get("value") and value_match(task["value"], a):
+        return True
     if ct == "exact":
         return a.lower().rstrip(".") == task["expected_answer"].lower()
     if ct == "contains":
-        return task["expected_answer"].lower() in a.lower()
+        exp = task["expected_answer"]
+        if exp.lower() in a.lower():
+            return True
+        # Accent/punctuation-insensitive for text only ("Andre Gide", "Dr Seuss"); numbers use `value`.
+        return not re.search(r"\d", exp) and loose(exp) in loose(a)
     if ct == "regex":
         return re.search(task["pattern"], a, re.I) is not None
     raise ValueError(f"unknown check_type {ct}")
+
+
+def format_suspect(task: dict[str, Any], answer: str | None) -> bool:
+    """A failed deterministic check whose answer still contains the reference's letters and
+    digits in order (e.g. an unforeseen format). Flagged for hand review, never silently
+    counted as a tool failure."""
+    core = loose(task["expected_answer"].split("(")[0])
+    return bool(core) and core in loose(answer or "")
 
 
 def parse_verdict(text: str) -> tuple[bool | None, str]:
@@ -75,7 +92,10 @@ def score(task: dict[str, Any], answer: str | None, cfg: dict[str, Any], quota: 
     """{"correct": bool|None, "method": ..., "judge": {...}?}. Empty answers fail without a judge call."""
     det = check(task, answer)
     if det is not None:
-        return {"correct": det, "method": task["check_type"]}
+        out: dict[str, Any] = {"correct": det, "method": task["check_type"]}
+        if not det and (answer or "").strip():
+            out["format_suspect"] = format_suspect(task, answer)
+        return out
     if not (answer or "").strip():
         return {"correct": False, "method": "judge_skipped_empty"}
     j = judge(task, answer or "", cfg, quota, complete)

@@ -6,7 +6,7 @@ from bench import cli
 
 
 @pytest.mark.parametrize("argv", [["smoke", "--help"], ["tasks-check", "--help"], ["run", "--help"],
-                                  ["memorized", "--help"]])
+                                  ["memorized", "--help"], ["tool-check", "--help"]])
 def test_subcommands_parse(argv):
     with pytest.raises(SystemExit) as e:
         cli.main(argv)

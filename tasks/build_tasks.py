@@ -86,10 +86,10 @@ t("j03", "js_heavy", f"{Q}/scroll",
   "What tags are attached to the Douglas Adams quote on this page?", "life, navigation", "judge",
   via="/api/quotes?page=2 (quote #16, loaded only on scroll)")
 t("j04", "js_heavy", f"{SC}/javascript-rendering",
-  "What is the price of the Grayson Crewneck Sweatshirt on this page?", "$64", "regex", r"\$\s?64(\.00)?\b",
+  "What is the price of the Grayson Crewneck Sweatshirt on this page?", "$64", "regex", r"\$\s?64(?:\.00)?(?!\.?\d)",
   via="/ajax/products/json regular_price=64; products rendered by JS")
 t("j05", "js_heavy", f"{SC}/infinite-scrolling",
-  "What is the price of the Kenobi Trail Jacket on this page?", "$47", "regex", r"\$\s?47(\.00)?\b",
+  "What is the price of the Kenobi Trail Jacket on this page?", "$47", "regex", r"\$\s?47(?:\.00)?(?!\.?\d)",
   via="/ajax/products?offset=12 (second batch, loaded on scroll)")
 t("j06", "js_heavy", f"{DT}/data_sources/ajax.html",
   "What is Airi Satou's start date in this table?", "2008-11-28", "regex",
@@ -148,7 +148,7 @@ t("p10", "pdf", "https://arxiv.org/pdf/1301.3781v3",
 
 # ---- interactive: needs a click, search, or pagination ------------------------
 t("i01", "interactive", f"{SC}/button-click",
-  "What is the price of the Lando Gym Jacket on this page?", "$99", "regex", r"\$\s?99(\.00)?\b",
+  "What is the price of the Lando Gym Jacket on this page?", "$99", "regex", r"\$\s?99(?:\.00)?(?!\.?\d)",
   via="/ajax/products?offset=12; loaded only after clicking 'Load More'")
 t("i02", "interactive", "https://www.scrapethissite.com/pages/ajax-javascript/",
   "Which 2010 film on this page had 3 nominations and 2 awards?", "Alice in Wonderland", "contains",
@@ -177,7 +177,7 @@ t("i09", "interactive", f"{Q}/",
   "How many quotes on this site are tagged 'humor' in total?", "12", "regex", r"\b12\b|\btwelve\b",
   via="/api/quotes, all pages: 12. The tag page shows 10 on page 1 and 2 on page 2.")
 t("i10", "interactive", f"{SC}/pagination",
-  "What is the price of the Geo Insulated Jogging Pant on this site?", "$51", "regex", r"\$\s?51(\.00)?\b",
+  "What is the price of the Geo Insulated Jogging Pant on this site?", "$51", "regex", r"\$\s?51(?:\.00)?(?!\.?\d)",
   via="/pagination/3")
 
 # ---- interactive: is the answer reachable by constructing/following a URL, without clicking?
@@ -216,8 +216,28 @@ ANALYSIS_FLAGS = {
 }
 
 
+# Format-tolerant values (src/bench/normalize.py). A task passes if this value matches in any
+# format OR the original regex/contains check passes, so these only ever remove false fails.
+def _n(v, *also):
+    return {"kind": "number", "value": v, **({"also": list(also)} if also else {})}
+
+
+VALUES = {
+    "s02": _n(20), "s03": _n(13254), "s04": _n(32766), "s06": {"kind": "range", "lo": -1000, "hi": 1000},
+    "s07": _n(5874897), "s08": _n(44),
+    "j04": _n(64), "j05": _n(47), "j06": {"kind": "date", "value": "2008-11-28"},
+    "j07": {"kind": "date", "value": "2011-12-12"},
+    "p01": _n(0.0009137), "p02": _n(2.3e19), "p03": _n(60.5), "p04": _n(28.54), "p05": _n(0.9203, 92.03),
+    "p06": _n(225), "p08": _n(1.5), "p09": _n(2.1e6),
+    "i01": _n(99), "i03": _n(247), "i05": _n(110), "i07": _n(7439),
+    "i08": {"kind": "date", "value": "2012-06-01"}, "i09": _n(12), "i10": _n(51),
+}
+
+
 def apply_annotations(tasks: list[dict]) -> None:
     for d in tasks:
+        if d["id"] in VALUES:
+            d["value"] = VALUES[d["id"]]
         if d["id"] in URL_NAVIGABLE:
             d["url_navigable"], d["url_route"] = URL_NAVIGABLE[d["id"]]
         if d["id"] in REWRITTEN_FROM:

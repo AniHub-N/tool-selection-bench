@@ -24,5 +24,11 @@
     "steps": 0,
     "calls": 1
   },
-  "list_usd_total": 0.045852
+  "list_usd_total": 0.045852,
+  "nvidia": {
+    "credits": 7,
+    "tokens_in": 0,
+    "tokens_out": 0,
+    "note": "2026-11-08: 7 attempts, 0 successful (404 not-deployed x4, 504/timeout x3)"
+  }
 }

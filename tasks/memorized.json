@@ -107,8 +107,10 @@
     ]
   },
   "j06": {
-    "memorized": false,
-    "models": [],
+    "memorized": true,
+    "models": [
+      "flash-lite"
+    ],
     "checked": [
       "flash-lite"
     ]

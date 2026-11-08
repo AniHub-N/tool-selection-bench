@@ -7,6 +7,8 @@ from pathlib import Path
 
 import pytest
 
+from bench.scoring import check
+
 TASKS = [json.loads(l) for l in open(Path(__file__).parents[1] / "tasks" / "tasks.jsonl", encoding="utf-8")]
 REQUIRED = {"id", "category", "url", "question", "expected_answer", "check_type"}
 # Plausible wrong or hedging answers that must not pass a deterministic check.
@@ -15,11 +17,8 @@ DECOYS = ["I don't know.", "None", "The page did not load, so I can't tell.",
 
 
 def matches(task, answer):
-    if task["check_type"] == "contains":
-        return task["expected_answer"].lower() in answer.lower()
-    if task["check_type"] == "regex":
-        return re.search(task["pattern"], answer, re.I) is not None
-    raise ValueError(task["check_type"])
+    """The real scorer: value normalizer first, then the contains/regex check."""
+    return check(task, answer)
 
 
 def test_shape():

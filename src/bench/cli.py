@@ -13,7 +13,7 @@ import sys
 from pathlib import Path
 
 from .config import ROOT, TASKS_DIR, load_config
-from .quota import Quota, QuotaPaused
+from .quota import Quota, QuotaPaused, llm_resource
 from .runlog import ResumeConflict, RunDir
 from .tools import load_tools
 
@@ -35,14 +35,17 @@ def cmd_smoke(args: argparse.Namespace) -> int:
     tools, skipped = load_tools(cfg)
     for s in skipped:
         print(f"[skip] {s}")
+    from .llm import api_key
     models = [] if args.no_llm else list(cfg["models"])
-    if models and not os.environ.get("GEMINI_API_KEY"):
-        print("[skip] gemini: GEMINI_API_KEY not set, skipping LLM check")
-        models = []
+    for m in list(models):
+        if not api_key(cfg["models"][m]):
+            print(f"[skip] {m}: no API key set ({cfg['models'][m].get('api_key_env', 'GEMINI_API_KEY')})")
+            models.remove(m)
 
     quota = Quota(cfg, ROOT / cfg["quota"]["ledger"])
     plan = {t.name: quota.estimate_tool_units(t.name, None) * len(tasks) for t in tools}
-    plan.update({f"gemini:{m}": 1 for m in models})
+    for m in models:
+        plan[llm_resource(cfg, m)] = plan.get(llm_resource(cfg, m), 0) + 1
     quota.preflight(plan, "smoke")
     try:
         run = RunDir.start("none", "smoke", extra={"tools": [t.name for t in tools], "skipped": skipped},
@@ -154,8 +157,9 @@ def cmd_run(args: argparse.Namespace) -> int:
     if args.model not in cfg["models"]:
         print(f"unknown model {args.model!r}; choose from {list(cfg['models'])}")
         return 1
-    if not os.environ.get("GEMINI_API_KEY"):
-        print("GEMINI_API_KEY not set")
+    from .llm import api_key
+    if not api_key(cfg["models"][args.model]):
+        print(f"{args.model}: no API key set ({cfg['models'][args.model].get('api_key_env', 'GEMINI_API_KEY')})")
         return 1
     tasks = load_tasks(Path(args.tasks))
     if args.task:
@@ -166,8 +170,8 @@ def cmd_run(args: argparse.Namespace) -> int:
     quota = Quota(cfg, ROOT / cfg["quota"]["ledger"])
     plan: dict[str, float] = defaultdict(float)
     max_req = 1 if args.mode == "no_tools" else cfg["agent"]["max_tool_calls"] + 1
-    plan[f"gemini:{args.model}"] += len(tasks) * reps * max_req
-    plan[f"gemini:{cfg['judge']['model']}"] += sum(t["check_type"] == "judge" for t in tasks) * reps
+    plan[llm_resource(cfg, args.model)] += len(tasks) * reps * max_req
+    plan[llm_resource(cfg, cfg['judge']['model'])] += sum(t["check_type"] == "judge" for t in tasks) * reps
     quota.preflight(dict(plan), f"{args.model} {args.mode} x{reps}")
     try:
         run = RunDir.start(args.model, args.mode, resume=not args.new, tasks_path=Path(args.tasks),
@@ -226,6 +230,7 @@ def cmd_memorized(args: argparse.Namespace) -> int:
     from collections import defaultdict
 
     from .config import RUNS_DIR
+    from .scoring import check
     cfg = load_config()
     tasks = load_tasks(TASKS_DIR / "tasks.jsonl")
     by_id = {t["id"]: t for t in tasks}
@@ -243,7 +248,9 @@ def cmd_memorized(args: argparse.Namespace) -> int:
                     continue
                 same_q = rec.get("question") == t["question"] if "question" in rec else "rewritten_from" not in t
                 if same_q:
-                    verdict[t["id"]][m] = bool(rec["score"]["correct"])
+                    # Re-check deterministic tasks with the current (format-tolerant) scorer; free.
+                    det = check(t, rec.get("final_answer"))
+                    verdict[t["id"]][m] = bool(rec["score"]["correct"] if det is None else det)
                     took += 1
             if took:
                 used.append(f"{r.id} ({took})")
@@ -269,6 +276,50 @@ def cmd_memorized(args: argparse.Namespace) -> int:
     return 1 if missing else 0
 
 
+def cmd_tool_check(args: argparse.Namespace) -> int:
+    """Exactly ONE request: offer a single fetch tool and check the model emits a well-formed
+    tool call (right name, a url argument). Confirms tool calling before any real run."""
+    from .agent import tool_spec, user_message
+    from .llm import api_key, complete
+    from .tools.base import Tool
+    cfg = load_config()
+    m = args.model
+    if m not in cfg["models"] or not api_key(cfg["models"][m]):
+        print(f"{m}: unknown model or no API key")
+        return 1
+    quota = Quota(cfg, ROOT / cfg["quota"]["ledger"])
+    quota.preflight({llm_resource(cfg, m): 1}, f"tool-check {m}")
+    task = {"question": "What is the title of this page?", "url": "https://quotes.toscrape.com/"}
+    msgs = [{"role": "system", "content": cfg["agent"]["system_prompt"]},
+            {"role": "user", "content": user_message(task)}]
+    spec = tool_spec("fetch_page", "Fetch a web page and return its text.", Tool.parameters)
+    try:
+        out = complete(m, cfg, quota, msgs, tools=[spec])
+    except QuotaPaused as e:
+        print(f"[quota] PAUSED: {e}")
+        return EXIT_PAUSED
+    msg = out["message"]
+    calls = getattr(msg, "tool_calls", None) or []
+    ok = False
+    for c in calls:
+        try:
+            a = json.loads(c.function.arguments or "{}")
+        except json.JSONDecodeError:
+            a = {}
+        print(f"tool_call: name={c.function.name!r} args={a}")
+        ok = ok or (c.function.name == "fetch_page" and str(a.get("url", "")).startswith("http"))
+    if not calls:
+        print(f"no tool call; content={(msg.content or '')[:300]!r}")
+    print(f"usage={out['usage']} list=${out['list_usd']:.6f}")
+    print("PASS: tool calling works" if ok else "FAIL: no well-formed tool call")
+    run_dir = ROOT / "runs" / "tool_checks.jsonl"
+    with open(run_dir, "a", encoding="utf-8") as f:
+        f.write(json.dumps({"model": m, "id": cfg["models"][m]["id"], "pass": ok,
+                            "calls": [{"name": c.function.name, "args": c.function.arguments} for c in calls],
+                            "content": msg.content, "usage": out["usage"]}) + "\n")
+    return 0 if ok else 1
+
+
 def _not_yet(phase: int):
     def handler(args: argparse.Namespace) -> int:
         print(f"`{args.command}` lands in phase {phase}.")
@@ -286,6 +337,10 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--task", action="append", help="only run this task id (repeatable)")
     s.add_argument("--no-llm", action="store_true", help="skip the Gemini check")
     s.set_defaults(func=cmd_smoke)
+
+    tk = sub.add_parser("tool-check", help="ONE request: does the model emit a well-formed tool call?")
+    tk.add_argument("--model", required=True)
+    tk.set_defaults(func=cmd_tool_check)
 
     tc = sub.add_parser("tasks-check", help="free check: is each answer visible to plain_fetch?")
     tc.add_argument("--tasks", default=str(TASKS_DIR / "tasks.jsonl"))

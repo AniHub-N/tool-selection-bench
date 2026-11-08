@@ -1,0 +1,23 @@
+{
+  "run_id": "20261108T065917Z_flash-lite_no_tools",
+  "model": "flash-lite",
+  "mode": "no_tools",
+  "status": "invalid",
+  "experiment_hash": "505e369b87cf",
+  "created_at": "2026-11-08T06:59:17.464382+00:00",
+  "sessions": [
+    {
+      "started_at": "2026-11-08T06:59:17.464382+00:00",
+      "commit": "977876b651461fc90dae5d5a63eddd359c3dc2e6",
+      "dirty": true,
+      "ended_at": "2026-11-08T07:06:46.821769+00:00",
+      "ended_status": "complete",
+      "list_usd": 0.003083
+    }
+  ],
+  "model_id": "gemini/gemini-3.5-flash-lite",
+  "reps": 1,
+  "n_tasks": 40,
+  "tools": [],
+  "invalid_reason": "39/40 empty outputs: system prompt 'Answer the question using the tools available.' with zero tools makes Gemini return no content. Superseded by a run using system_prompt_no_tools."
+}

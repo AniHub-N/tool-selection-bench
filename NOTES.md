@@ -185,3 +185,42 @@ check and writes `tasks/plain_visibility.json`.
   HTML); the Redoc demo (spec and asset hashes change with releases); the httpbin Swagger UI (no
   stable version field); ECMA-404 and RFC 1149 (too well known, so answerable from memory);
   the W3C CSS2 property index (the answer "2" isn't distinctive).
+
+## Phase 3 prep: no_tools mode (2026-11-08)
+
+- **The neutral system prompt with zero tools makes Gemini return nothing.** The first
+  Flash-Lite no_tools run returned empty content on 39 of 40 tasks (finish_reason=stop,
+  0 output tokens, only a thought signature). It isn't temperature: the default temperature was
+  also empty. With no system prompt, or "Answer the question.", it answers normally. So no_tools
+  uses `agent.system_prompt_no_tools = "Answer the question."`; everything else about the agent
+  is unchanged. The broken run is kept, marked `status: invalid`. Run summaries now warn when
+  any final answer is empty.
+- **Partial memorization of fixture data.** From memory, Flash-Lite gave the s01 UPC as
+  `a897fe39a106848d`; the real value is `a897fe39b1053632`. The first 8 characters match, so
+  books.toscrape is in its training data, but not exactly. The deterministic check correctly
+  fails it.
+- **Infra errors were being logged as results.** A Windows `PermissionError` (WinError 5) while
+  replacing the quota ledger killed one task (s03) and it was recorded as a failed answer, so
+  resume would have skipped it. Fixes: the ledger save retries on PermissionError; resume
+  retries records that have an error and no answer; aggregation uses the latest record per
+  (task, rep).
+- **url_navigable.** i02 is false (year links are `href="#"`; the endpoint only appears in
+  external JS). i07 and i08 are true: DataTables example pages print their own source code,
+  including `ajax: '../ajax/data/objects.txt'` / `arrays.txt`, and those files hold the answer.
+  The user's initial read had i07 false; flagged for review. The same applies to the js_heavy
+  DataTables tasks (j06, j07): a fetch-only agent could read the data file directly.
+- **i10 tight call budget.** Page 1 links to /pagination/2, /3 and /13. A sequential scan
+  reaches the answer on the 3rd call (exactly the cap); jumping straight to /3 takes 2. It's
+  flagged `analysis_flag: tight_call_budget` and reported separately.
+- **Flash's real free-tier RPD is about 20, not 250.** After 21 Flash requests on 2026-11-07 (Pacific
+  day; smoke + judge + 9 no_tools tasks), the server returned 429 "You exceeded your current
+  quota". The daily-quota detector paused the run cleanly, and it resumes after midnight Pacific.
+  `quota.gemini.flash.rpd` is now set to 20. At about 20 requests/day the Flash plan (no_tools 45,
+  free choice up to 480, ablations more) takes weeks, which needs a decision.
+- **Is Flash browsing, or did it memorize?** Before pausing, Flash answered all 9 no_tools tasks it
+  reached (s01–s09), quoting page text verbatim (exact UPC, "In stock (20 available)"). Input
+  tokens stayed around 48, so no page content was added to the prompt, but Gemini bills built-in
+  URL fetching separately, so that doesn't settle it. These toscrape strings are also reproduced
+  in many scraping tutorials. Planned test: ask Flash about a random.org `rnd=id.<seed>` URL
+  (deterministic per seed, checkable locally, can't be memorized).
+- Flash-Lite no_tools (complete): 12/40 correct from memory, so memorization is not rare.

@@ -129,6 +129,131 @@ def cmd_tasks_check(args: argparse.Namespace) -> int:
     return 0
 
 
+MODES_READY = {"no_tools"}
+
+
+def latest_results(run: RunDir) -> list[dict]:
+    """Last record per (task_id, rep): a retried record supersedes the failed attempt."""
+    last: dict[tuple, dict] = {}
+    for r in run.records("results"):
+        last[(r["task_id"], r["rep"])] = r
+    return list(last.values())
+
+
+def cmd_run(args: argparse.Namespace) -> int:
+    """Agent run. Phase 3 so far: --mode no_tools (zero tools; measures memorization)."""
+    from collections import defaultdict
+
+    from .agent import run_task
+    from .scoring import route_taken, score
+
+    if args.mode not in MODES_READY:
+        print(f"mode {args.mode!r} lands later in phase 3. Ready: {sorted(MODES_READY)}")
+        return 1
+    cfg = load_config()
+    if args.model not in cfg["models"]:
+        print(f"unknown model {args.model!r}; choose from {list(cfg['models'])}")
+        return 1
+    if not os.environ.get("GEMINI_API_KEY"):
+        print("GEMINI_API_KEY not set")
+        return 1
+    tasks = load_tasks(Path(args.tasks))
+    if args.task:
+        tasks = [t for t in tasks if t["id"] in args.task]
+    reps = args.reps or (1 if args.mode == "no_tools" else 3)
+    tools, specs = {}, None  # no_tools
+
+    quota = Quota(cfg, ROOT / cfg["quota"]["ledger"])
+    plan: dict[str, float] = defaultdict(float)
+    max_req = 1 if args.mode == "no_tools" else cfg["agent"]["max_tool_calls"] + 1
+    plan[f"gemini:{args.model}"] += len(tasks) * reps * max_req
+    plan[f"gemini:{cfg['judge']['model']}"] += sum(t["check_type"] == "judge" for t in tasks) * reps
+    quota.preflight(dict(plan), f"{args.model} {args.mode} x{reps}")
+    try:
+        run = RunDir.start(args.model, args.mode, resume=not args.new,
+                           extra={"model_id": cfg["models"][args.model]["id"], "reps": reps,
+                                  "n_tasks": len(tasks), "tools": sorted(tools)})
+    except ResumeConflict as e:
+        print(f"[run] {e}")
+        return 1
+    # Records that died on an infrastructure error (no answer) are retried on resume.
+    done = {(r["task_id"], r["rep"]) for r in run.records("results")
+            if not (r.get("error") and r.get("final_answer") is None)}
+    try:
+        for rep in range(reps):
+            for t in tasks:
+                if (t["id"], rep) in done:
+                    continue
+                rec = run_task(t, args.model, cfg, quota, tools, specs)
+                sc = score(t, rec["final_answer"], cfg, quota)
+                row = {"task_id": t["id"], "category": t["category"], "rep": rep, "model": args.model,
+                       "mode": args.mode, **rec, "score": sc, "route": route_taken(rec, t)}
+                run.log("results", row)
+                ans = (rec["final_answer"] or rec["error"] or "").replace("\n", " ")[:90]
+                print(f"{'PASS' if sc['correct'] else 'fail'} {t['id']} r{rep} [{sc['method']}] {ans}")
+    except QuotaPaused as e:
+        run.set_status("paused", reason=str(e))
+        print(f"[quota] PAUSED: {e}\n[quota] rerun the same command to resume.")
+        return EXIT_PAUSED
+    run.set_status("complete", list_usd=round(quota.session_list_usd, 6))
+    _print_summary(latest_results(run))
+    print(f"\n[quota] this session: list-price ${quota.session_list_usd:.4f}, actual $0\nlogs: {run.path}")
+    return 0
+
+
+def _print_summary(rows: list[dict]) -> None:
+    from collections import defaultdict
+    by = defaultdict(lambda: [0, 0])
+    for r in rows:
+        by[r["category"]][0] += bool(r["score"]["correct"])
+        by[r["category"]][1] += 1
+    print("\ncategory      correct")
+    for c, (k, n) in by.items():
+        print(f"{c:<13} {k}/{n}")
+    print(f"{'total':<13} {sum(v[0] for v in by.values())}/{sum(v[1] for v in by.values())}")
+    empty = sum(not (r.get("final_answer") or "").strip() for r in rows)
+    if empty:
+        print(f"WARNING: {empty}/{len(rows)} empty final answers; check the raw logs before trusting these numbers.")
+
+
+def cmd_memorized(args: argparse.Namespace) -> int:
+    """Aggregate the latest complete no_tools run per model into tasks/memorized.json and
+    rebuild tasks.jsonl with `memorized` flags."""
+    import runpy
+    from collections import defaultdict
+
+    from .config import RUNS_DIR
+    cfg = load_config()
+    mem: dict[str, dict] = defaultdict(lambda: {"memorized": False, "models": []})
+    used = []
+    for m in cfg["models"]:
+        runs = [RunDir(p) for p in sorted(RUNS_DIR.glob(f"*_{m}_no_tools"), reverse=True)]
+        runs = [r for r in runs if r.meta.get("status") == "complete"]
+        if not runs:
+            print(f"[memorized] no complete no_tools run for {m}; run: python -m bench run --model {m} --mode no_tools")
+            return 1
+        used.append(runs[0].id)
+        for r in latest_results(runs[0]):
+            if r["score"]["correct"]:
+                e = mem[r["task_id"]]
+                e["memorized"] = True
+                if m not in e["models"]:
+                    e["models"].append(m)
+    tasks = load_tasks(TASKS_DIR / "tasks.jsonl")
+    out = {t["id"]: mem.get(t["id"], {"memorized": False, "models": []}) for t in tasks}
+    (TASKS_DIR / "memorized.json").write_text(json.dumps({**out, "_runs": used}, indent=2) + "\n")
+    runpy.run_path(str(TASKS_DIR / "build_tasks.py"), run_name="__main__")
+    per_cat = defaultdict(list)
+    for t in tasks:
+        if out[t["id"]]["memorized"]:
+            per_cat[t["category"]].append(f"{t['id']}({','.join(out[t['id']]['models'])})")
+    print(f"[memorized] from runs: {used}")
+    for c in ["static", "js_heavy", "pdf", "interactive"]:
+        flag = "  <- more than 1: swap candidates" if len(per_cat[c]) > 1 else ""
+        print(f"  {c:<12} {len(per_cat[c])}: {' '.join(per_cat[c]) or '-'}{flag}")
+    return 0
+
+
 def _not_yet(phase: int):
     def handler(args: argparse.Namespace) -> int:
         print(f"`{args.command}` lands in phase {phase}.")
@@ -152,9 +277,15 @@ def main(argv: list[str] | None = None) -> int:
     tc.set_defaults(func=cmd_tasks_check)
 
     sub.add_parser("oracle", help="force each tool on every task").set_defaults(func=_not_yet(3))
-    r = sub.add_parser("run", help="free-choice agent run")
-    r.add_argument("--model"), r.add_argument("--mode", default="free")
-    r.set_defaults(func=_not_yet(3))
+    r = sub.add_parser("run", help="agent run (modes: no_tools; free lands later in phase 3)")
+    r.add_argument("--model", required=True)
+    r.add_argument("--mode", default="free")
+    r.add_argument("--reps", type=int, help="repeats per task (default: 1 for no_tools, 3 otherwise)")
+    r.add_argument("--tasks", default=str(TASKS_DIR / "tasks.jsonl"))
+    r.add_argument("--task", action="append", help="only run this task id (repeatable)")
+    r.add_argument("--new", action="store_true", help="start a fresh run instead of resuming")
+    r.set_defaults(func=cmd_run)
+    sub.add_parser("memorized", help="flag tasks answered correctly in no_tools runs").set_defaults(func=cmd_memorized)
     sub.add_parser("ablate", help="ablation runs").set_defaults(func=_not_yet(4))
     sub.add_parser("label", help="hand-label outputs for judge validation").set_defaults(func=_not_yet(4))
     sub.add_parser("report", help="build report.md and charts").set_defaults(func=_not_yet(5))

@@ -175,7 +175,44 @@ t("i10", "interactive", f"{SC}/pagination",
   "What is the price of the Geo Insulated Jogging Pant on this site?", "$51", "regex", r"\$\s?51(\.00)?\b",
   via="/pagination/3")
 
+# ---- interactive: is the answer reachable by constructing/following a URL, without clicking?
+URL_NAVIGABLE = {
+    "i01": (False, "Load More button fires an XHR; no URL for the second batch is visible on the page."),
+    "i02": (False, "Year links are href='#'; the ?ajax=true&year= endpoint only appears in external JS."),
+    "i03": (True, "Search is a GET form: ?q=Toronto."),
+    "i04": (True, "Pagination links: /page/4/."),
+    "i05": (True, "Category links on the home page."),
+    "i06": (True, "Product links on the home page."),
+    "i07": (True, "The page prints its example code, including ajax: '../ajax/data/objects.txt', which "
+                  "contains the extension. Reachable by URL even though the UI expects a click."),
+    "i08": (True, "The page prints ajax: '../ajax/data/arrays.txt' (all 57 rows) in its code listing."),
+    "i09": (True, "Tag pages: /tag/humor/ and /tag/humor/page/2/."),
+    "i10": (True, "Page 1 links to /pagination/2, /3 and /13."),
+}
+ANALYSIS_FLAGS = {
+    "i10": ("tight_call_budget",
+            "The answer is on /pagination/3. A page-by-page scan (1, 2, 3) uses exactly the 3-call cap; jumping "
+            "straight from page 1 to the /3 link takes 2. No margin, so report it separately."),
+}
+
+
+def apply_annotations(tasks: list[dict]) -> None:
+    for d in tasks:
+        if d["id"] in URL_NAVIGABLE:
+            d["url_navigable"], d["url_route"] = URL_NAVIGABLE[d["id"]]
+        if d["id"] in ANALYSIS_FLAGS:
+            d["analysis_flag"], d["analysis_note"] = ANALYSIS_FLAGS[d["id"]]
+    # memorized.json is written by `python -m bench memorized` from the no_tools runs.
+    mem_path = Path(__file__).with_name("memorized.json")
+    if mem_path.exists():
+        mem = json.loads(mem_path.read_text(encoding="utf-8"))
+        for d in tasks:
+            m = mem.get(d["id"], {"memorized": False, "models": []})
+            d["memorized"], d["memorized_by"] = m["memorized"], m["models"]
+
+
 if __name__ == "__main__":
+    apply_annotations(T)
     out = Path(__file__).with_name("tasks.jsonl")
     with open(out, "w", encoding="utf-8") as f:
         for d in T:

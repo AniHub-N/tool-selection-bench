@@ -6,6 +6,7 @@ environment (e.g. OPENAI_API_KEY) are never used.
 
 from __future__ import annotations
 
+import logging
 import os
 import re
 from typing import Any
@@ -19,6 +20,9 @@ from .quota import Quota, QuotaPaused  # noqa: E402
 from .ratelimit import retry_call  # noqa: E402
 
 litellm.telemetry = False
+litellm.suppress_debug_info = True
+# The Gemini-3 "temperature is deprecated" warning fires on every call; it's recorded in NOTES.md once.
+logging.getLogger("LiteLLM").setLevel(logging.ERROR)
 litellm.drop_params = True  # e.g. drop `seed` if the provider doesn't accept it
 
 
@@ -36,10 +40,15 @@ def _retry_hint(e: Exception) -> float | None:
 
 
 def complete(name: str, cfg: dict[str, Any], quota: Quota, messages: list[dict],
-             tools: list[dict] | None = None) -> dict[str, Any]:
+             tools: list[dict] | None = None, tool_choice: str | None = None) -> dict[str, Any]:
     """One chat completion. Returns {message, usage: {in, out}, list_usd, model}."""
     m = cfg["models"][name]
     resource = f"gemini:{name}"
+    extra: dict[str, Any] = {}
+    if tools:
+        extra["tools"] = tools
+        if tool_choice:
+            extra["tool_choice"] = tool_choice
 
     def call():
         quota.check(resource, 1)
@@ -47,8 +56,8 @@ def complete(name: str, cfg: dict[str, Any], quota: Quota, messages: list[dict],
         if b:
             b.acquire()
         try:
-            return litellm.completion(model=m["id"], messages=messages, tools=tools,
-                                      temperature=cfg["agent"]["temperature"], seed=cfg["seed"])
+            return litellm.completion(model=m["id"], messages=messages,
+                                      temperature=cfg["agent"]["temperature"], seed=cfg["seed"], **extra)
         finally:
             # Count every attempt, including rejected ones: conservative.
             quota.record(resource, 1, 0.0)

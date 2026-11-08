@@ -62,7 +62,7 @@ class RunDir:
         if resume:
             for p in sorted(runs_dir.glob(f"*_{safe_model}_{mode}"), reverse=True):
                 meta = json.loads((p / "meta.json").read_text())
-                if meta.get("status") == "complete":
+                if meta.get("status") in ("complete", "invalid"):
                     continue
                 if meta.get("experiment_hash") != h:
                     raise ResumeConflict(
@@ -72,7 +72,7 @@ class RunDir:
                 meta["status"] = "running"
                 meta["sessions"].append({"started_at": _now(), **git_info()})
                 run._write_meta(meta)
-                print(f"[run] resuming {p.name} ({run.count('calls')} records so far)")
+                print(f"[run] resuming {p.name} ({sum(run.count(s) for s in ('calls', 'results'))} records so far)")
                 return run
         ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
         path = runs_dir / f"{ts}_{safe_model}_{mode}"

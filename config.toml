@@ -32,6 +32,8 @@ max_tool_calls = 3
 temperature = 0.0
 max_content_chars = 50000   # tool output truncated to this before going to the LLM (PDF table answers sit at 20-31k)
 system_prompt = "Answer the question using the tools available."
+# no_tools mode only: with the prompt above and zero tools, Gemini returns empty output (see NOTES.md).
+system_prompt_no_tools = "Answer the question."
 
 # Short name -> LiteLLM model id + list prices (USD per 1M tokens, Standard tier,
 # from ai.google.dev pricing, checked 2026-11-08). Both are on the free tier.
@@ -56,7 +58,7 @@ ledger = "runs/quota.json"
 # replace with the numbers on your dashboard. RPD resets at midnight Pacific.
 [quota.gemini.flash]
 rpm = 10
-rpd = 250
+rpd = 20                    # OBSERVED: server 429 "exceeded your current quota" after 21 requests on 2026-11-07 PT
 stop_frac = 0.9             # pause at 90% of RPD, leaving headroom
 
 [quota.gemini.flash-lite]
@@ -81,3 +83,7 @@ min_wallet_usd = 0.5        # also pause if the live wallet would drop below thi
 
 [quota.plain_fetch]
 rpm = 60
+
+[judge]
+# Fixed judge model + rubric (scoring.JUDGE_PROMPT). Validated against hand labels in Phase 4.
+model = "flash"

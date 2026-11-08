@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import json
 import os
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -158,7 +159,16 @@ class Quota:
         self.ledger.parent.mkdir(parents=True, exist_ok=True)
         tmp = self.ledger.with_suffix(".tmp")
         tmp.write_text(json.dumps(self.data, indent=2))
-        os.replace(tmp, self.ledger)
+        # Windows: os.replace can fail with WinError 5 while another process (indexer,
+        # antivirus, editor) briefly holds the file. Retry before giving up.
+        for attempt in range(10):
+            try:
+                os.replace(tmp, self.ledger)
+                return
+            except PermissionError:
+                if attempt == 9:
+                    raise
+                time.sleep(0.1 * (attempt + 1))
 
     # ---- tools -------------------------------------------------------------
 

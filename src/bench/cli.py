@@ -89,6 +89,46 @@ def cmd_smoke(args: argparse.Namespace) -> int:
     return 0
 
 
+def _find_answer(task: dict, content: str) -> int:
+    """Index of the expected answer in content, or -1. Judge tasks: all comma-separated
+    parts must appear (index of the first); single-token judge answers are skipped (-2)."""
+    import re
+    if task["check_type"] == "regex":
+        m = re.search(task["pattern"], content, re.I)
+        return m.start() if m else -1
+    if task["check_type"] == "judge":
+        parts = [p.strip().lower() for p in task["expected_answer"].split(",")]
+        if len(parts) < 2 and len(parts[0]) < 6:
+            return -2
+        idx = [content.lower().find(p) for p in parts]
+        return -1 if min(idx) < 0 else min(idx)
+    return content.lower().find(task["expected_answer"].lower())
+
+
+def cmd_tasks_check(args: argparse.Namespace) -> int:
+    """Free sanity check (no API quota): fetch every task URL with plain_fetch and report
+    whether the expected answer is visible, and where relative to the agent's truncation."""
+    cfg = load_config()
+    tasks = load_tasks(Path(args.tasks))
+    tools, _ = load_tools(cfg, ["plain_fetch"])
+    plain = tools[0]
+    cut = cfg["agent"]["max_content_chars"]
+    rows = []
+    for t in tasks:
+        r = plain.run({"url": t["url"]})
+        i = _find_answer(t, r.content)
+        seen = "n/a" if i == -2 else ("yes" if i >= 0 else "no")
+        flag = "  <- past truncation" if i >= cut else ""
+        rows.append({"id": t["id"], "category": t["category"], "plain_sees_answer": seen,
+                     "position": i if i >= 0 else None, "content_len": len(r.content), "error": r.error})
+        print(f"{t['id']}  {t['category']:<12} plain_sees_answer={seen:<4} pos={i if i >= 0 else '-':>6} "
+              f"len={len(r.content):>6} {r.error or ''}{flag}")
+    out = Path(args.tasks).with_name("plain_visibility.json")
+    out.write_text(json.dumps(rows, indent=2))
+    print(f"\nwrote {out}")
+    return 0
+
+
 def _not_yet(phase: int):
     def handler(args: argparse.Namespace) -> int:
         print(f"`{args.command}` lands in phase {phase}.")
@@ -106,6 +146,10 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--task", action="append", help="only run this task id (repeatable)")
     s.add_argument("--no-llm", action="store_true", help="skip the Gemini check")
     s.set_defaults(func=cmd_smoke)
+
+    tc = sub.add_parser("tasks-check", help="free check: is each answer visible to plain_fetch?")
+    tc.add_argument("--tasks", default=str(TASKS_DIR / "tasks.jsonl"))
+    tc.set_defaults(func=cmd_tasks_check)
 
     sub.add_parser("oracle", help="force each tool on every task").set_defaults(func=_not_yet(3))
     r = sub.add_parser("run", help="free-choice agent run")

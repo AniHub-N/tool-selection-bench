@@ -144,3 +144,44 @@ Kept to one URL to save quota.
 - Live balances: Firecrawl reports 1,400 remaining credits (plan 1,000; presumably signup
   bonus credits). The local 800-credit stop still applies. The TinyFish wallet shows $9.00, not $8.
 - Quota ledger day for Gemini is the Pacific date (2026-11-07 at 05:41 UTC), as intended.
+
+## Phase 2: task drafting (2026-11-08)
+
+Ground truth was verified only with free requests (httpx + the plain-fetch extractor, plus each
+JS page's underlying data source: embedded script arrays, JSON endpoints, swagger.json). No
+Gemini, Firecrawl or TinyFish quota was used. `tasks/build_tasks.py` is the source of truth; each
+task records `verified_via` so it can be re-checked by hand, and `memory_risk` for answers a
+model might know without fetching. `python -m bench tasks-check` reruns the free visibility
+check and writes `tasks/plain_visibility.json`.
+
+- **Truncation was silently making tasks unanswerable.** Table values in arXiv PDFs sit 20–31k
+  characters into the extracted text, past the agent's 20k cutoff, so every tool would fail them
+  equally. `agent.max_content_chars` is raised to 50k (about 12k tokens), which is fine for Gemini.
+  The same cutoff applies to every tool.
+- **Accidental matches on the start page.** The visibility check flagged i03 ("252" is also
+  Philadelphia's 1990 GF on page 1) and i05 ("19" is an item number on the home page). Both were
+  replaced: Toronto GF 247, and Nonfiction = 110 books.
+- **The "scanned" PDF had a text layer.** EWD215 is scanned, but page 1 is a typed copyright
+  notice that contains the title. The first draft asked for the title, which needed no OCR.
+  It now asks for a detail found only in the scanned body (Copenhagen, verified from the archive's
+  transcription).
+- **Small-number answers.** Where the natural answer is a small number that a wrong answer could
+  contain, the question asks for something else (i02 asks for a film title, not a count) or uses
+  `judge`. `tests/test_tasks.py` checks that each expected answer passes its own check and that
+  a set of decoy wrong answers fails every deterministic check.
+- **Wikipedia was dropped.** The Wikimedia API returns 403 to generic bot User-Agents; their
+  policy requires contact details in the UA, and we don't put the user's email in requests.
+  Article pages did load, but given the policy, every Wikipedia task was swapped out.
+- **Memory risk.** Questions favour fixture data (product codes, sandbox tables, paper tables).
+  Nine tasks are marked `memory_risk: medium`; the analysis should check whether the agent
+  answered those without calling a tool.
+- **PDF URLs are direct links** to the PDF (versioned arXiv `vN` URLs, archived BLS release).
+  The spec's "question answered inside a linked PDF" could also mean an HTML page linking to the
+  PDF; open question for review.
+- **scrapingcourse.com loads a Cloudflare Turnstile script.** It's a scraping sandbox, but
+  bot-protection may affect some tools. Worth watching in the oracle sweep.
+- **Petstore is used twice** (j08, j09). There were few stable, fully client-rendered public pages.
+- Dropped candidates: the webscraper.io static laptops page (product names no longer in the
+  HTML); the Redoc demo (spec and asset hashes change with releases); the httpbin Swagger UI (no
+  stable version field); ECMA-404 and RFC 1149 (too well known, so answerable from memory);
+  the W3C CSS2 property index (the answer "2" isn't distinctive).

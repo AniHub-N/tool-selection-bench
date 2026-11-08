@@ -30,7 +30,7 @@ oracle_categories = ["interactive"]   # oracle sweep runs the agent on these cat
 [agent]
 max_tool_calls = 3
 temperature = 0.0
-max_content_chars = 20000   # tool output truncated to this before going to the LLM
+max_content_chars = 50000   # tool output truncated to this before going to the LLM (PDF table answers sit at 20-31k)
 system_prompt = "Answer the question using the tools available."
 
 # Short name -> LiteLLM model id + list prices (USD per 1M tokens, Standard tier,

@@ -1,0 +1,322 @@
+[
+  {
+    "id": "s01",
+    "category": "static",
+    "plain_sees_answer": "yes",
+    "position": 1272,
+    "content_len": 1462,
+    "error": null
+  },
+  {
+    "id": "s02",
+    "category": "static",
+    "plain_sees_answer": "yes",
+    "position": 62,
+    "content_len": 1470,
+    "error": null
+  },
+  {
+    "id": "s03",
+    "category": "static",
+    "plain_sees_answer": "yes",
+    "position": 659,
+    "content_len": 23174,
+    "error": null
+  },
+  {
+    "id": "s04",
+    "category": "static",
+    "plain_sees_answer": "yes",
+    "position": 11141,
+    "content_len": 16299,
+    "error": null
+  },
+  {
+    "id": "s05",
+    "category": "static",
+    "plain_sees_answer": "yes",
+    "position": 3300,
+    "content_len": 85810,
+    "error": null
+  },
+  {
+    "id": "s06",
+    "category": "static",
+    "plain_sees_answer": "yes",
+    "position": 731,
+    "content_len": 16105,
+    "error": null
+  },
+  {
+    "id": "s07",
+    "category": "static",
+    "plain_sees_answer": "yes",
+    "position": 983,
+    "content_len": 29469,
+    "error": null
+  },
+  {
+    "id": "s08",
+    "category": "static",
+    "plain_sees_answer": "yes",
+    "position": 766,
+    "content_len": 3296,
+    "error": null
+  },
+  {
+    "id": "s09",
+    "category": "static",
+    "plain_sees_answer": "yes",
+    "position": 168,
+    "content_len": 3566,
+    "error": null
+  },
+  {
+    "id": "s10",
+    "category": "static",
+    "plain_sees_answer": "yes",
+    "position": 6154,
+    "content_len": 19717,
+    "error": null
+  },
+  {
+    "id": "j01",
+    "category": "js_heavy",
+    "plain_sees_answer": "no",
+    "position": null,
+    "content_len": 60,
+    "error": null
+  },
+  {
+    "id": "j02",
+    "category": "js_heavy",
+    "plain_sees_answer": "no",
+    "position": null,
+    "content_len": 60,
+    "error": null
+  },
+  {
+    "id": "j03",
+    "category": "js_heavy",
+    "plain_sees_answer": "no",
+    "position": null,
+    "content_len": 78,
+    "error": null
+  },
+  {
+    "id": "j04",
+    "category": "js_heavy",
+    "plain_sees_answer": "no",
+    "position": null,
+    "content_len": 260,
+    "error": null
+  },
+  {
+    "id": "j05",
+    "category": "js_heavy",
+    "plain_sees_answer": "no",
+    "position": null,
+    "content_len": 2720,
+    "error": null
+  },
+  {
+    "id": "j06",
+    "category": "js_heavy",
+    "plain_sees_answer": "no",
+    "position": null,
+    "content_len": 9894,
+    "error": null
+  },
+  {
+    "id": "j07",
+    "category": "js_heavy",
+    "plain_sees_answer": "no",
+    "position": null,
+    "content_len": 10123,
+    "error": null
+  },
+  {
+    "id": "j08",
+    "category": "js_heavy",
+    "plain_sees_answer": "no",
+    "position": null,
+    "content_len": 0,
+    "error": "empty_content"
+  },
+  {
+    "id": "j09",
+    "category": "js_heavy",
+    "plain_sees_answer": "n/a",
+    "position": null,
+    "content_len": 0,
+    "error": "empty_content"
+  },
+  {
+    "id": "j10",
+    "category": "js_heavy",
+    "plain_sees_answer": "no",
+    "position": null,
+    "content_len": 60,
+    "error": null
+  },
+  {
+    "id": "p01",
+    "category": "pdf",
+    "plain_sees_answer": "yes",
+    "position": 19214,
+    "content_len": 22005,
+    "error": null
+  },
+  {
+    "id": "p02",
+    "category": "pdf",
+    "plain_sees_answer": "yes",
+    "position": 21874,
+    "content_len": 30845,
+    "error": null
+  },
+  {
+    "id": "p03",
+    "category": "pdf",
+    "plain_sees_answer": "yes",
+    "position": 21342,
+    "content_len": 42299,
+    "error": null
+  },
+  {
+    "id": "p04",
+    "category": "pdf",
+    "plain_sees_answer": "yes",
+    "position": 24364,
+    "content_len": 49604,
+    "error": null
+  },
+  {
+    "id": "p05",
+    "category": "pdf",
+    "plain_sees_answer": "yes",
+    "position": 15266,
+    "content_len": 19716,
+    "error": null
+  },
+  {
+    "id": "p06",
+    "category": "pdf",
+    "plain_sees_answer": "yes",
+    "position": 16776,
+    "content_len": 29024,
+    "error": null
+  },
+  {
+    "id": "p07",
+    "category": "pdf",
+    "plain_sees_answer": "no",
+    "position": null,
+    "content_len": 241,
+    "error": null
+  },
+  {
+    "id": "p08",
+    "category": "pdf",
+    "plain_sees_answer": "yes",
+    "position": 3759,
+    "content_len": 31599,
+    "error": null
+  },
+  {
+    "id": "p09",
+    "category": "pdf",
+    "plain_sees_answer": "yes",
+    "position": 30559,
+    "content_len": 44780,
+    "error": null
+  },
+  {
+    "id": "p10",
+    "category": "pdf",
+    "plain_sees_answer": "n/a",
+    "position": null,
+    "content_len": 33244,
+    "error": null
+  },
+  {
+    "id": "i01",
+    "category": "interactive",
+    "plain_sees_answer": "no",
+    "position": null,
+    "content_len": 2721,
+    "error": null
+  },
+  {
+    "id": "i02",
+    "category": "interactive",
+    "plain_sees_answer": "no",
+    "position": null,
+    "content_len": 348,
+    "error": null
+  },
+  {
+    "id": "i03",
+    "category": "interactive",
+    "plain_sees_answer": "no",
+    "position": null,
+    "content_len": 3296,
+    "error": null
+  },
+  {
+    "id": "i04",
+    "category": "interactive",
+    "plain_sees_answer": "no",
+    "position": null,
+    "content_len": 2864,
+    "error": null
+  },
+  {
+    "id": "i05",
+    "category": "interactive",
+    "plain_sees_answer": "no",
+    "position": null,
+    "content_len": 10453,
+    "error": null
+  },
+  {
+    "id": "i06",
+    "category": "interactive",
+    "plain_sees_answer": "no",
+    "position": null,
+    "content_len": 10453,
+    "error": null
+  },
+  {
+    "id": "i07",
+    "category": "interactive",
+    "plain_sees_answer": "no",
+    "position": null,
+    "content_len": 10945,
+    "error": null
+  },
+  {
+    "id": "i08",
+    "category": "interactive",
+    "plain_sees_answer": "no",
+    "position": null,
+    "content_len": 9894,
+    "error": null
+  },
+  {
+    "id": "i09",
+    "category": "interactive",
+    "plain_sees_answer": "no",
+    "position": null,
+    "content_len": 2864,
+    "error": null
+  },
+  {
+    "id": "i10",
+    "category": "interactive",
+    "plain_sees_answer": "no",
+    "position": null,
+    "content_len": 2921,
+    "error": null
+  }
+]

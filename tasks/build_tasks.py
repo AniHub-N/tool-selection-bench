@@ -234,8 +234,43 @@ VALUES = {
 }
 
 
+# Oracle "tool can solve this task" = the answer is present in the tool's RAW output
+# (scoring.evidence_present). Default: the task's own check run on the raw output. That is fine
+# for distinctive answers (UPCs, names, 13254) but meaningless for small numbers or prices on a
+# page full of them, so those get context patterns (ALL must match one raw output).
+# "aggregate" = the answer is a count/derivation that never appears verbatim on a page: presence
+# can't decide it, so the oracle reports "?" for fetch tools (the agent's answer is still checked).
+# Patterns are validated by hand against the saved raw outputs after the sweep (NOTES.md).
+PRICE = r"[^$]{0,300}\$\s?%s(?:\.00)?(?!\.?\d)"   # the first price after the product name
+EVIDENCE = {
+    "s02": {"all": [r"In stock \(20 available\)"]},
+    "s05": {"all": [r"\b16\W+2\W+The database page size"]},
+    "s06": {"all": [r"-\s?1,?000\D{1,25}1,?000"]},
+    "s08": {"all": [r"Boston Bruins\W+1990\W+44\b"]},
+    "j01": {"all": [rf"Jane Austen[\s\S]{{0,400}}?{t}" for t in ("aliteracy", "books", "classic", "humor")]},
+    "j03": {"all": [rf"Douglas Adams[\s\S]{{0,400}}?{t}" for t in ("life", "navigation")]},
+    "j04": {"all": ["Grayson Crewneck Sweatshirt" + PRICE % "64"]},
+    "j05": {"all": ["Kenobi Trail Jacket" + PRICE % "47"]},
+    "j06": {"all": [r"Airi Satou[^\n]{0,300}(?:2008[/-]11[/-]28|28th Nov 08)"]},
+    "j07": {"all": [r"Caesar Vance[^\n]{0,300}(?:2011[/-]12[/-]12|12th Dec 11)"]},
+    "j09": {"aggregate": "count of store operations"},
+    "p06": {"all": [r"\b225\s*(?:±|\+/?-)\s*2\b"]},
+    "p08": {"all": [r"Motor vehicle insurance[^\n]{0,200}\b1\.5\b"]},
+    "p10": {"all": [r"Continuous Bag-of-Words|\bCBOW\b"]},
+    "i01": {"all": ["Lando Gym Jacket" + PRICE % "99"]},
+    "i03": {"all": [r"Toronto Maple Leafs\W+1995\W+(?:[\d.]+\W+){3,4}247\b"]},
+    "i05": {"all": [r"\b110\b\W*results?"]},
+    "i07": {"all": [r"Zenaida Frank[\s\S]{0,400}?\b7439\b"]},
+    "i08": {"all": [r"Zorita Serrano[^\n]{0,300}(?:2012[/-]0?6[/-]0?1|1st Jun 12)"]},
+    "i09": {"aggregate": "count of quotes tagged humor across pages"},
+    "i10": {"all": ["Geo Insulated Jogging Pant" + PRICE % "51"]},
+}
+
+
 def apply_annotations(tasks: list[dict]) -> None:
     for d in tasks:
+        if d["id"] in EVIDENCE:
+            d["evidence"] = EVIDENCE[d["id"]]
         if d["id"] in VALUES:
             d["value"] = VALUES[d["id"]]
         if d["id"] in URL_NAVIGABLE:

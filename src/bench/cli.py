@@ -297,9 +297,9 @@ def cmd_oracle(args: argparse.Namespace) -> int:
 
 def cmd_oracle_table(args: argparse.Namespace) -> int:
     """Print and save the merged oracle table for the current config + task file. No API calls."""
-    from .oracle import current_hash, merged_rows, oracle_table
+    from .oracle import merged_for, oracle_table
     tasks_path = Path(args.tasks)
-    rows = merged_rows(current_hash(tasks_path))
+    rows = merged_for(load_tasks(tasks_path))
     if not rows:
         print("no oracle results for the current config + task file")
         return 1

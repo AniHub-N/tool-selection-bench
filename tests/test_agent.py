@@ -132,9 +132,11 @@ def test_blocked_page_markers():
     assert blocked_page("Cloudflare Challenge | CAPTCHA | Login") is None
 
 
-def test_answer_in_content_logged(cfg, tmp_path):
-    task = {**TASK, "check_type": "contains", "expected_answer": "page http"}  # within the 10-char truncation
+def test_raw_sink_gets_full_untruncated_output(cfg, tmp_path):
+    saved = []
     complete, _ = scripted(["https://e.org/a"], "dunno")
-    rec = run_task(task, "flash", cfg, Quota(cfg, tmp_path / "q.json"), tools={"fetch": Echo()},
-                   specs=[{"function": {"name": "fetch"}}], complete=complete)
-    assert rec["tool_calls"][0]["answer_in_content"] is True
+    rec = run_task(TASK, "flash", cfg, Quota(cfg, tmp_path / "q.json"), tools={"fetch": Echo()},
+                   specs=[{"function": {"name": "fetch"}}], complete=complete,
+                   raw_sink=lambda c: saved.append(c) or "raw/x.txt")
+    assert rec["tool_calls"][0]["raw_ref"] == "raw/x.txt"
+    assert saved[0].startswith("page https://e.org/a") and len(saved[0]) > cfg["agent"]["max_content_chars"]

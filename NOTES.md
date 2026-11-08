@@ -353,3 +353,28 @@ check and writes `tasks/plain_visibility.json`.
 - Neutral tool descriptions live in config.toml `[tool_descriptions.neutral]`. Facts behind them:
   smoke showed plain fetch gets 60 chars on quotes/js while Firecrawl and TinyFish Fetch get the
   rendered quotes.
+
+## Oracle verdict redefined: answer present in raw tool output (2026-11-08)
+
+- **"Tool can solve this task" = the answer is present in the tool's raw output** (any call in the
+  cell). Flash-Lite's extraction pass/fail is a **separate** column. Otherwise a Flash-Lite
+  extraction miss would count against the tool, and selection accuracy would later be scored
+  against the wrong oracle.
+- Every tool call's full, untruncated output is saved content-addressed in `runs/<run>/raw/`
+  (gitignored: it's third-party page and PDF text), so the verdict is recomputed offline by
+  `oracle-table` and evidence patterns can be refined without re-running anything.
+- Evidence (`tasks/build_tasks.py` EVIDENCE, `scoring.evidence_present`):
+  - default: the task's own check run on the raw output; fine for distinctive answers.
+  - context patterns for small numbers and prices on pages full of them (e.g. the first price
+    after "Grayson Crewneck Sweatshirt"; "In stock (20 available)"; the Boston Bruins 1990 row).
+  - `aggregate` (i09 humor count, j09 store-op count): never appears verbatim, so presence is
+    undecidable and the oracle reports `?` for fetch tools.
+  - the TinyFish agent's output is an answer, not a page, so it's checked like an answer.
+  - Known limit: position questions (j02 7th author, j10 last author on page 2, i04 first author
+    on page 4) count as "present" if the name appears in the fetched output; the right page is
+    implied, not verified.
+- The first sweep was stopped after 12 cells (s01-s04 on 3 fetch tools) because it saved only the
+  first 300 chars of each output; that run and the s01 test cell are marked `invalid`.
+- Oracle rows merge on the config hash + each task's current question, not the task-file hash,
+  so editing evidence patterns afterwards doesn't orphan results.
+- Patterns are validated by hand against the saved raw outputs once the sweep is done.

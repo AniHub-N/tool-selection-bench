@@ -50,6 +50,22 @@ def check(task: dict[str, Any], answer: str | None) -> bool | None:
     raise ValueError(f"unknown check_type {ct}")
 
 
+def evidence_present(task: dict[str, Any], content: str, tool_name: str | None = None) -> bool | None:
+    """Oracle definition of "this tool can solve this task": is the answer present in this RAW
+    tool output? None = presence can't decide it (aggregate answers, or a judge task with no
+    evidence pattern). The browser agent's output is an answer, not a page, so it is checked
+    like one."""
+    ev = task.get("evidence") or {}
+    if tool_name == "tinyfish_agent":
+        return check(task, content) if task["check_type"] != "judge" else (
+            all(re.search(p, content or "", re.I) for p in ev["all"]) if ev.get("all") else None)
+    if ev.get("aggregate"):
+        return None
+    if ev.get("all"):
+        return all(re.search(p, content or "", re.I) for p in ev["all"])
+    return check(task, content)
+
+
 def format_suspect(task: dict[str, Any], answer: str | None) -> bool:
     """A failed deterministic check whose answer still contains the reference's letters and
     digits in order (e.g. an unforeseen format). Flagged for hand review, never silently

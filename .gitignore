@@ -13,3 +13,6 @@ wheels/
 .env
 
 .pytest_cache/
+
+# Full tool outputs (page/PDF text): kept locally, not committed
+runs/*/raw/

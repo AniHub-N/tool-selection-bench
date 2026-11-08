@@ -2,29 +2,29 @@
   "gemini": {
     "flash": {
       "day": "2026-11-08",
-      "requests": 3,
+      "requests": 4,
       "tokens_in": 358,
       "tokens_out": 811
     },
     "flash-lite": {
       "day": "2026-11-08",
-      "requests": 11,
-      "tokens_in": 1164,
-      "tokens_out": 625
+      "requests": 37,
+      "tokens_in": 62943,
+      "tokens_out": 1487
     }
   },
   "firecrawl_scrape": {
-    "2026-11": 1.0
+    "2026-11": 5.0
   },
   "tinyfish_fetch": {
-    "2026-11-08": 1
+    "2026-11-08": 5
   },
   "tinyfish_agent": {
     "usd": 0.048,
     "steps": 3,
     "calls": 2
   },
-  "list_usd_total": 0.094256,
+  "list_usd_total": 0.134945,
   "nvidia": {
     "credits": 8,
     "dropped": "2026-11-08",

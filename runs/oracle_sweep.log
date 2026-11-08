@@ -1,0 +1,24 @@
+[quota] preflight for oracle flash-lite: 130 task x tool cells
+[quota]   firecrawl live: 1399 credits remaining (plan 1000, period ends 2026-11-29T13:41:58.019Z)
+[quota]   tinyfish live: wallet $10.95
+[quota]   resource                estimate      used   stop at
+[quota]   plain_fetch                    0         0         -
+[quota]   firecrawl_scrape             230         1       800
+[quota]   tinyfish_fetch                40         1       900
+[quota]   tinyfish_agent               0.8     0.048       6.0
+[quota]   gemini:flash-lite            520        11       900
+[quota]   gemini:flash                  15         3        18
+[quota]   list-price total so far: $0.0943 (actual spend: $0)
+[run] new run 20261108T125103Z_flash-lite_oracle
+PASS s01 plain_fetch       calls=1  | The UPC of the book "A Light in the Attic" is **a897fe39b1053632**.
+PASS s01 firecrawl_scrape  calls=1  | The UPC of this book is **a897fe39b1053632**.
+PASS s01 tinyfish_fetch    calls=1  | The UPC of this book is **a897fe39b1053632**.
+PASS s02 plain_fetch       calls=1  | There are **20** copies of this book listed as available.
+PASS s02 firecrawl_scrape  calls=1  | There are **20** copies of this book listed as available.
+PASS s02 tinyfish_fetch    calls=1  | There are **20** copies of this book listed as available.
+PASS s03 plain_fetch       calls=1  | The page lists the population of Anguilla as **13254**.
+PASS s03 firecrawl_scrape  calls=1  | The page lists a population of **13254** for Anguilla.
+PASS s03 tinyfish_fetch    calls=1  | The page lists a population of **13254** for Anguilla.
+PASS s04 plain_fetch       calls=1  | For SQLite versions after 3.32.0, the default value of `SQLITE_MAX_VAR
+PASS s04 firecrawl_scrape  calls=1  | For SQLite versions after 3.32.0, the default value of `SQLITE_MAX_VAR
+PASS s04 tinyfish_fetch    calls=1  | For SQLite versions after 3.32.0, the default value of `SQLITE_MAX_VAR

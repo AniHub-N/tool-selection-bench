@@ -55,7 +55,8 @@ def _msg_to_dict(msg: Any) -> dict[str, Any]:
 def run_task(task: dict[str, Any], model: str, cfg: dict[str, Any], quota: Quota,
              tools: dict[str, Tool] | None = None, specs: list[dict] | None = None,
              complete: Callable[..., dict] | None = None,
-             first_tool_choice: str | None = None) -> dict[str, Any]:
+             first_tool_choice: str | None = None,
+             raw_sink: Callable[[str], str] | None = None) -> dict[str, Any]:
     """Run one task. `tools` maps the name shown to the model -> Tool (names can be
     anonymized); `specs` are the tool definitions shown to the model.
     first_tool_choice="required" forces a tool call on the first turn (oracle sweep)."""
@@ -120,10 +121,9 @@ def run_task(task: dict[str, Any], model: str, cfg: dict[str, Any], quota: Quota
                                  cost_usd=res.cost_usd, content_len=len(res.content),
                                  truncated=len(res.content) > max_chars, meta=res.meta,
                                  content_head=res.content[:300], blocked=blocked_page(res.content))
-                    if task.get("check_type") in ("exact", "contains", "regex") and res.ok:
-                        # Diagnostic only (noisy for small numbers): did the raw output contain the answer?
-                        from .scoring import check
-                        entry["answer_in_content"] = bool(check(task, res.content[:max_chars]))
+                    if raw_sink is not None and res.content:
+                        # Full, untruncated output, so "can this tool solve it" is recomputable offline.
+                        entry["raw_ref"] = raw_sink(res.content)
                 if entry.get("tool"):
                     calls.append(entry)
                 else:

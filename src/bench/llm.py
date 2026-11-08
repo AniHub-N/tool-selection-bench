@@ -1,8 +1,7 @@
 """Thin LiteLLM wrapper: quota check, rate limit, 429 backoff, usage + list-price cost.
 
-Only models listed in config.toml are called: Gemini (GEMINI_API_KEY) and NVIDIA build
-(api_base + key read explicitly from api_key_env). Other provider keys in the environment
-(e.g. OPENAI_API_KEY) are never used.
+Only the Gemini models listed in config.toml are called (GEMINI_API_KEY). Other provider
+keys in the environment (e.g. OPENAI_API_KEY) are never used.
 """
 
 from __future__ import annotations
@@ -51,19 +50,13 @@ def api_key(m: dict[str, Any]) -> str | None:
     return None
 
 
-def provider_kwargs(m: dict[str, Any]) -> dict[str, Any]:
-    """Explicit api_base/api_key for non-Gemini providers, so LiteLLM never falls back to other env keys."""
-    if m.get("provider") != "nvidia":
-        return {}
-    return {"api_base": m["api_base"], "api_key": api_key(m)}
-
-
 def complete(name: str, cfg: dict[str, Any], quota: Quota, messages: list[dict],
-             tools: list[dict] | None = None, tool_choice: str | None = None) -> dict[str, Any]:
+             tools: list[dict] | None = None, tool_choice: str | None = None,
+             retries: int = 4, timeout_s: float | None = None) -> dict[str, Any]:
     """One chat completion. Returns {message, usage: {in, out}, list_usd, model}."""
     m = cfg["models"][name]
     resource = llm_resource(cfg, name)
-    extra: dict[str, Any] = provider_kwargs(m)
+    extra: dict[str, Any] = {}
     if tools:
         extra["tools"] = tools
         if tool_choice:
@@ -76,12 +69,13 @@ def complete(name: str, cfg: dict[str, Any], quota: Quota, messages: list[dict],
             b.acquire()
         try:
             return litellm.completion(model=m["id"], messages=messages,
-                                      temperature=cfg["agent"]["temperature"], seed=cfg["seed"], **extra)
+                                      temperature=cfg["agent"]["temperature"], seed=cfg["seed"],
+                                      num_retries=0, **({"timeout": timeout_s} if timeout_s else {}), **extra)
         finally:
             # Count every attempt, including rejected ones: conservative.
             quota.record(resource, 1, 0.0)
 
-    resp = retry_call(call, _retry_hint)
+    resp = retry_call(call, _retry_hint, retries=retries)
     u = resp.usage
     tin, tout = (u.prompt_tokens or 0), (u.completion_tokens or 0)
     list_usd = tin / 1e6 * m["usd_per_mtok_in"] + tout / 1e6 * m["usd_per_mtok_out"]

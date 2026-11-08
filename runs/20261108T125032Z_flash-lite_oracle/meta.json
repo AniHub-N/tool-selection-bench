@@ -1,0 +1,23 @@
+{
+  "run_id": "20261108T125032Z_flash-lite_oracle",
+  "model": "flash-lite",
+  "mode": "oracle",
+  "status": "complete",
+  "experiment_hash": "3683de01553f-f067279c79b3",
+  "created_at": "2026-11-08T12:50:32.533153+00:00",
+  "sessions": [
+    {
+      "started_at": "2026-11-08T12:50:32.533153+00:00",
+      "commit": "2a4fb8a6977723b71842c32b1d83c42022c50b14",
+      "dirty": true,
+      "ended_at": "2026-11-08T12:50:37.732412+00:00",
+      "ended_status": "complete",
+      "list_usd": 0.000404
+    }
+  ],
+  "model_id": "gemini/gemini-3.5-flash-lite",
+  "tools": [
+    "plain_fetch"
+  ],
+  "n_cells": 1
+}

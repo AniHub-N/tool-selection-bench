@@ -17,6 +17,18 @@ from .tools.base import Tool
 
 LIMIT_MSG = "Tool call limit reached. Answer with the information you already have."
 
+# Phrases from challenge/interstitial pages only. Not "captcha"/"cloudflare": scrapingcourse.com's
+# own navigation lists its Cloudflare and CAPTCHA practice pages.
+_BLOCK_MARKERS = ("just a moment...", "cf-chl-", "attention required! | cloudflare", "verify you are human",
+                  "enable javascript and cookies to continue", "checking your browser before accessing",
+                  "performing security verification")
+
+
+def blocked_page(content: str) -> str | None:
+    """A bot-protection / challenge marker found in the tool output, if any."""
+    low = (content or "")[:20000].lower()
+    return next((m for m in _BLOCK_MARKERS if m in low), None)
+
 
 def user_message(task: dict[str, Any]) -> str:
     return f"{task['question']}\n\nURL: {task['url']}"
@@ -42,9 +54,11 @@ def _msg_to_dict(msg: Any) -> dict[str, Any]:
 
 def run_task(task: dict[str, Any], model: str, cfg: dict[str, Any], quota: Quota,
              tools: dict[str, Tool] | None = None, specs: list[dict] | None = None,
-             complete: Callable[..., dict] | None = None) -> dict[str, Any]:
+             complete: Callable[..., dict] | None = None,
+             first_tool_choice: str | None = None) -> dict[str, Any]:
     """Run one task. `tools` maps the name shown to the model -> Tool (names can be
-    anonymized); `specs` are the tool definitions shown to the model."""
+    anonymized); `specs` are the tool definitions shown to the model.
+    first_tool_choice="required" forces a tool call on the first turn (oracle sweep)."""
     if complete is None:
         from .llm import complete  # lazy: litellm import is slow
     tools = tools or {}
@@ -73,7 +87,13 @@ def run_task(task: dict[str, Any], model: str, cfg: dict[str, Any], quota: Quota
     try:
         while True:
             limit_hit = len(calls) >= max_calls
-            msg = llm("none" if (tools and limit_hit) else None)
+            if tools and limit_hit:
+                choice = "none"
+            elif tools and not calls and rec["llm_requests"] == 0:
+                choice = first_tool_choice
+            else:
+                choice = None
+            msg = llm(choice)
             tcs = getattr(msg, "tool_calls", None) or []
             if not tcs or not tools or limit_hit:
                 final = msg.content or ""
@@ -99,7 +119,11 @@ def run_task(task: dict[str, Any], model: str, cfg: dict[str, Any], quota: Quota
                     entry.update(tool=tool.name, ok=res.ok, error=res.error, latency_ms=res.latency_ms,
                                  cost_usd=res.cost_usd, content_len=len(res.content),
                                  truncated=len(res.content) > max_chars, meta=res.meta,
-                                 content_head=res.content[:300])
+                                 content_head=res.content[:300], blocked=blocked_page(res.content))
+                    if task.get("check_type") in ("exact", "contains", "regex") and res.ok:
+                        # Diagnostic only (noisy for small numbers): did the raw output contain the answer?
+                        from .scoring import check
+                        entry["answer_in_content"] = bool(check(task, res.content[:max_chars]))
                 if entry.get("tool"):
                     calls.append(entry)
                 else:

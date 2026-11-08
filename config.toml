@@ -35,6 +35,16 @@ system_prompt = "Answer the question using the tools available."
 # no_tools mode only: with the prompt above and zero tools, Gemini returns empty output (see NOTES.md).
 system_prompt_no_tools = "Answer the question."
 
+# Tool descriptions shown to the model. "neutral" = factual capabilities only, similar length,
+# no adjectives. Used by the oracle sweep and plain free choice; the ablation adds a "salesy" set.
+# Facts: plain fetch has no JS (smoke: 60 chars on quotes/js); Firecrawl and TinyFish Fetch
+# returned the JS-rendered quotes; Firecrawl parses PDFs via its pdf parser.
+[tool_descriptions.neutral]
+plain_fetch = "Fetch a URL with a plain HTTP GET and return the main text as Markdown. Does not run JavaScript. PDFs are converted to text."
+firecrawl_scrape = "Fetch a URL with Firecrawl and return the page as Markdown. Runs JavaScript before extracting. PDFs are converted to text."
+tinyfish_fetch = "Fetch a URL with TinyFish Fetch and return the page as Markdown. Runs JavaScript before extracting."
+tinyfish_agent = "Give a browser agent a start URL and a goal in plain language. It can click, scroll, paginate and fill forms (up to 5 steps), then returns what it found."
+
 # Short name -> LiteLLM model id + list prices (USD per 1M tokens, Standard tier,
 # from ai.google.dev pricing, checked 2026-11-08). Both are on the free tier.
 [models.flash]
@@ -47,18 +57,6 @@ id = "gemini/gemini-3.5-flash-lite"
 usd_per_mtok_in = 0.30
 usd_per_mtok_out = 2.50
 
-# NVIDIA build.nvidia.com free credits (OpenAI-compatible). NOT A MAIN MODEL (2026-11-08): Llama
-# 3.3 70B / gpt-oss-120b aren't listed; nemotron-3-super, kimi-k2.6 and mistral-large-2 return
-# 404 "not found for account"; gpt-oss-20b and deepseek-v4.1-flash timed out (504 / no reply in
-# 150 s). Kept wired to gpt-oss-20b, the only reachable candidate, for a later retry:
-#   python -m bench tool-check --model nemotron
-[models.nemotron]
-id = "nvidia_nim/openai/gpt-oss-20b"
-provider = "nvidia"
-api_base = "https://integrate.api.nvidia.com/v1"
-api_key_env = ["NVIDIA_API_KEY", "NVIDIA_KEY"]
-usd_per_mtok_in = 0.03      # approx. OpenRouter list price for gpt-oss-20b; re-check if it is ever used
-usd_per_mtok_out = 0.15
 
 # ---------------------------------------------------------------------------
 # Free-quota limits. Excluded from the run's config hash, so editing these
@@ -78,13 +76,6 @@ stop_frac = 0.9             # pause at 90% of RPD, leaving headroom
 rpm = 15
 rpd = 1000
 stop_frac = 0.9
-
-# NVIDIA trial credits: shared by every provider="nvidia" model, all-time (they don't reset).
-# Counted as 1 credit per request attempt (conservative; NVIDIA has no balance API we can call).
-[quota.nvidia]
-rpm = 40
-free_credits = 1000
-stop_at = 900
 
 [quota.firecrawl_scrape]
 rpm = 10                   # free plan: 10 scrapes/min, 2 concurrent (we run serially)
@@ -109,11 +100,7 @@ rpm = 60
 model = "flash"
 
 [experiment]
-# Main model pair (decision 2026-11-08). Flash is a side run (1 rep free choice, no ablations).
 # Decision 2026-11-08: Scout (Groq) is shut down, Mistral's free plan is gone, and NVIDIA was
-# unusable (see NOTES.md), so per the fallback Flash-Lite is the ONLY main model. Flash is a side
+# unusable and then dropped (see NOTES.md), so Flash-Lite is the ONLY main model. Flash is a side
 # run (1 rep free choice, no ablations). The README must state "Gemini family only".
-# If NVIDIA starts working: add "nemotron" here; it gets the reduced plan
-# (no_tools + free x2 + one ablation: anonymized names).
 main_models = ["flash-lite"]
-reduced_plan_models = ["nemotron"]

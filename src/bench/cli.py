@@ -276,6 +276,39 @@ def cmd_memorized(args: argparse.Namespace) -> int:
     return 1 if missing else 0
 
 
+def cmd_oracle(args: argparse.Namespace) -> int:
+    """Oracle sweep (see oracle.py): the agent gets one tool at a time and must use it."""
+    from .llm import api_key
+    from .oracle import run_oracle
+    cfg = load_config()
+    model = args.model or cfg["experiment"]["main_models"][0]
+    if not api_key(cfg["models"][model]):
+        print(f"{model}: no API key set")
+        return 1
+    tasks_path = Path(args.tasks)
+    tasks = load_tasks(tasks_path)
+    if args.task:
+        tasks = [t for t in tasks if t["id"] in args.task]
+    tools, skipped = load_tools(cfg, args.tool)
+    for s in skipped:
+        print(f"[skip] {s}")
+    return run_oracle(cfg, model, tasks, tools, tasks_path, resume=not args.new)
+
+
+def cmd_oracle_table(args: argparse.Namespace) -> int:
+    """Print and save the merged oracle table for the current config + task file. No API calls."""
+    from .oracle import current_hash, merged_rows, oracle_table
+    tasks_path = Path(args.tasks)
+    rows = merged_rows(current_hash(tasks_path))
+    if not rows:
+        print("no oracle results for the current config + task file")
+        return 1
+    table = oracle_table(rows, load_tasks(tasks_path))
+    (ROOT / "runs" / "oracle_table.md").write_text(table + "\n", encoding="utf-8")
+    print(table)
+    return 0
+
+
 def cmd_tool_check(args: argparse.Namespace) -> int:
     """Exactly ONE request: offer a single fetch tool and check the model emits a well-formed
     tool call (right name, a url argument). Confirms tool calling before any real run."""
@@ -294,10 +327,13 @@ def cmd_tool_check(args: argparse.Namespace) -> int:
             {"role": "user", "content": user_message(task)}]
     spec = tool_spec("fetch_page", "Fetch a web page and return its text.", Tool.parameters)
     try:
-        out = complete(m, cfg, quota, msgs, tools=[spec])
+        out = complete(m, cfg, quota, msgs, tools=[spec], retries=0, timeout_s=180)  # exactly one attempt
     except QuotaPaused as e:
         print(f"[quota] PAUSED: {e}")
         return EXIT_PAUSED
+    except Exception as e:
+        print(f"FAIL: {type(e).__name__}: {str(e)[:300]}")
+        return 1
     msg = out["message"]
     calls = getattr(msg, "tool_calls", None) or []
     ok = False
@@ -346,7 +382,16 @@ def main(argv: list[str] | None = None) -> int:
     tc.add_argument("--tasks", default=str(TASKS_DIR / "tasks.jsonl"))
     tc.set_defaults(func=cmd_tasks_check)
 
-    sub.add_parser("oracle", help="force each tool on every task").set_defaults(func=_not_yet(3))
+    o = sub.add_parser("oracle", help="force each tool on every task (agent gets one tool at a time)")
+    o.add_argument("--model", help="default: first of experiment.main_models")
+    o.add_argument("--tool", action="append", help="only this tool (repeatable); default: all enabled")
+    o.add_argument("--tasks", default=str(TASKS_DIR / "tasks.jsonl"))
+    o.add_argument("--task", action="append", help="only this task id (repeatable)")
+    o.add_argument("--new", action="store_true", help="start a fresh run instead of resuming")
+    o.set_defaults(func=cmd_oracle)
+    ot = sub.add_parser("oracle-table", help="print the merged oracle table (no API calls)")
+    ot.add_argument("--tasks", default=str(TASKS_DIR / "tasks.jsonl"))
+    ot.set_defaults(func=cmd_oracle_table)
     r = sub.add_parser("run", help="agent run (modes: no_tools; free lands later in phase 3)")
     r.add_argument("--model", required=True)
     r.add_argument("--mode", default="free")

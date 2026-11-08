@@ -8,9 +8,9 @@
     },
     "flash-lite": {
       "day": "2026-11-08",
-      "requests": 9,
-      "tokens_in": 458,
-      "tokens_out": 548
+      "requests": 11,
+      "tokens_in": 1164,
+      "tokens_out": 625
     }
   },
   "firecrawl_scrape": {
@@ -20,15 +20,14 @@
     "2026-11-08": 1
   },
   "tinyfish_agent": {
-    "usd": 0.0,
-    "steps": 0,
-    "calls": 1
+    "usd": 0.048,
+    "steps": 3,
+    "calls": 2
   },
-  "list_usd_total": 0.045852,
+  "list_usd_total": 0.094256,
   "nvidia": {
-    "credits": 7,
-    "tokens_in": 0,
-    "tokens_out": 0,
-    "note": "2026-11-08: 7 attempts, 0 successful (404 not-deployed x4, 504/timeout x3)"
+    "credits": 8,
+    "dropped": "2026-11-08",
+    "note": "8 attempts, 0 successful (404 not-deployed x4, 504/timeout x3, final tool-check killed after 240 s). NVIDIA dropped; history kept for the record."
   }
 }

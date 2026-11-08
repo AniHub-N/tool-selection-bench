@@ -115,3 +115,26 @@ def test_no_tools_uses_its_own_system_prompt(cfg, tmp_path):
     run_task(TASK, "flash", cfg, q, complete=complete)
     run_task(TASK, "flash", cfg, q, {"fetch": Echo()}, [{"type": "function", "function": {"name": "fetch"}}], complete)
     assert seen == [cfg["agent"]["system_prompt_no_tools"], cfg["agent"]["system_prompt"]]
+
+
+def test_first_tool_choice_only_on_first_turn(cfg, tmp_path):
+    complete, seen = scripted(["https://e.org/a"], "X is 42.")
+    rec = run_task(TASK, "flash", cfg, Quota(cfg, tmp_path / "q.json"), tools={"fetch": Echo()},
+                   specs=[{"function": {"name": "fetch"}}], complete=complete, first_tool_choice="required")
+    assert [s["tool_choice"] for s in seen] == ["required", None]
+    assert rec["final_answer"] == "X is 42."
+
+
+def test_blocked_page_markers():
+    from bench.agent import blocked_page
+    assert blocked_page("<title>Just a moment...</title>") == "just a moment..."
+    # scrapingcourse's nav mentions its practice pages; that is not a block
+    assert blocked_page("Cloudflare Challenge | CAPTCHA | Login") is None
+
+
+def test_answer_in_content_logged(cfg, tmp_path):
+    task = {**TASK, "check_type": "contains", "expected_answer": "page http"}  # within the 10-char truncation
+    complete, _ = scripted(["https://e.org/a"], "dunno")
+    rec = run_task(task, "flash", cfg, Quota(cfg, tmp_path / "q.json"), tools={"fetch": Echo()},
+                   specs=[{"function": {"name": "fetch"}}], complete=complete)
+    assert rec["tool_calls"][0]["answer_in_content"] is True

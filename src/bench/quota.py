@@ -2,8 +2,6 @@
 
 Tracked resources and when they pause a run:
 - gemini:<model>    requests per Pacific day   > rpd * stop_frac
-- nvidia            trial credits, all-time    > stop_at (900 of 1,000); 1 credit per request,
-                                                 shared by every provider="nvidia" model
 - firecrawl_scrape  credits per month          > stop_at (800 of 1,000), also checked against
                                                  the live remaining balance
 - tinyfish_fetch    URLs per UTC day           > stop_at (900 of the free 1,000)
@@ -39,7 +37,7 @@ class QuotaPaused(RuntimeError):
 
 def llm_resource(cfg: dict[str, Any], name: str) -> str:
     """Quota resource that a model's requests are charged to."""
-    return "nvidia" if cfg["models"][name].get("provider") == "nvidia" else f"gemini:{name}"
+    return f"gemini:{name}"
 
 
 def pt_day() -> str:
@@ -63,7 +61,6 @@ class Quota:
         for k in ("gemini", "firecrawl_scrape", "tinyfish_fetch"):
             self.data.setdefault(k, {})
         self.data.setdefault("tinyfish_agent", {"usd": 0.0, "steps": 0, "calls": 0})
-        self.data.setdefault("nvidia", {"credits": 0, "tokens_in": 0, "tokens_out": 0})
         self.data.setdefault("list_usd_total", 0.0)
         self.live: dict[str, float] = {}       # live balances at preflight
         self.session: dict[str, float] = {}    # units used since preflight
@@ -96,15 +93,13 @@ class Quota:
             return self.data["tinyfish_fetch"].get(utc_day(), 0)
         if resource == "tinyfish_agent":
             return self.data["tinyfish_agent"]["usd"]
-        if resource == "nvidia":
-            return self.data["nvidia"]["credits"]
         return 0
 
     def limit(self, resource: str) -> float | None:
         lim = self._limits_key(resource)
         if resource.startswith("gemini:"):
             return int(lim["rpd"] * lim.get("stop_frac", 1.0))
-        if resource in ("firecrawl_scrape", "tinyfish_fetch", "nvidia"):
+        if resource in ("firecrawl_scrape", "tinyfish_fetch"):
             return lim["stop_at"]
         if resource == "tinyfish_agent":
             return lim["cap_usd"]
@@ -135,8 +130,6 @@ class Quota:
             return "Resets at midnight Pacific; rerun the same command then to resume."
         if resource == "tinyfish_fetch":
             return "Resets 00:00 UTC; rerun then to resume."
-        if resource == "nvidia":
-            return "NVIDIA trial credits do not reset. Raise stop_at only if credits remain."
         if resource == "firecrawl_scrape":
             return "Resets with the Firecrawl billing month."
         return "This cap does not reset. Raise it in config.toml only if you mean to spend more."
@@ -157,11 +150,6 @@ class Quota:
         elif resource == "tinyfish_fetch":
             d = utc_day()
             self.data[resource][d] = self.data[resource].get(d, 0) + units
-        elif resource == "nvidia":
-            n = self.data["nvidia"]
-            n["credits"] += units
-            for k, v in (extra or {}).items():
-                n[k] = n.get(k, 0) + v
         elif resource == "tinyfish_agent":
             a = self.data["tinyfish_agent"]
             a["usd"] = round(a["usd"] + units, 6)

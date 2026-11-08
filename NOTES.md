@@ -317,3 +317,39 @@ check and writes `tasks/plain_visibility.json`.
   ledger. **Flash-Lite is the only main model; the README must say "Gemini family only".** The
   NVIDIA wiring stays (pointed at gpt-oss-20b) so `python -m bench tool-check --model nemotron`
   can retry it; if it passes, it joins on the reduced plan.
+- **Dropped (2026-11-08).** The one permitted retry (`tool-check --model nemotron`, gpt-oss-20b)
+  got no reply and was killed after 240 s: 8 attempts, 0 answers in total. Per the decision, NVIDIA
+  is removed from config.toml, quota.py, llm.py and the tests; nothing NVIDIA-specific remains
+  wired. runs/quota.json keeps the 8 attempts as history. Gemini family only.
+
+## Memorization: final state before the oracle (2026-11-08)
+
+- **The DataTables sample dataset (datatables.net/examples) is fully memorized by Flash-Lite**:
+  j06 (Airi Satou start date, found by the format-tolerant re-score) and j07 (Caesar Vance start
+  date, even after the rewrite). Both stay `memorized: true` and are reported separately.
+  (i08 on the same dataset is in the known_answer subset; i07, Zenaida Frank's extension, was not
+  answered correctly from memory.)
+- **js_heavy therefore has 8 clean tasks** (10 minus j06 and j07); j08 is known_answer, so 7
+  non-memorized, non-known_answer js_heavy tasks. The one-per-category rule is relaxed to allow
+  this. No more rewrites.
+
+## Oracle sweep design (2026-11-08)
+
+- Each cell = the real agent (Flash-Lite, same system prompt, same 3-call cap) offered ONLY that
+  tool, with its neutral description, and `tool_choice="required"` on the first turn so it can't
+  answer from memory. Later turns are free (auto), then a forced final answer at the cap. One rep.
+  This measures "can this tool, as used by this model, solve the task"; regret and selection
+  accuracy compare free-choice picks against it.
+- TinyFish agent: interactive tasks only (`oracle_categories`). Beta confirmed active 2026-11-08
+  (1 smoke request: 3 steps, $0.048, correct answer).
+- Each logged tool call also records `blocked` (challenge-page phrases only: scrapingcourse's
+  own nav lists its "Cloudflare"/"CAPTCHA" practice pages, so those words are not markers) and
+  `answer_in_content` (deterministic check on the raw output the model saw; noisy for small
+  numbers, diagnostic only).
+- Judge verdicts that hit the Flash judge quota are stored as `judge_pending`; rerunning
+  `oracle` re-judges them without calling tools again.
+- Oracle runs with the same config + task file merge into one table (`oracle-table`), so a
+  separate agent-only run would merge in.
+- Neutral tool descriptions live in config.toml `[tool_descriptions.neutral]`. Facts behind them:
+  smoke showed plain fetch gets 60 chars on quotes/js while Firecrawl and TinyFish Fetch get the
+  rendered quotes.

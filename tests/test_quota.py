@@ -176,34 +176,3 @@ def test_retry_call_non_retryable_propagates():
     with pytest.raises(KeyError):
         retry_call(lambda: {}["x"], lambda e: None, sleep=lambda s: None)
 
-
-# ---- NVIDIA trial credits ----------------------------------------------------
-
-def test_nvidia_credits_shared_all_time_and_pause_at_stop(cfg, tmp_path):
-    from bench.quota import llm_resource
-    cfg["quota"]["nvidia"].update(stop_at=3)
-    assert llm_resource(cfg, "nemotron") == "nvidia"
-    assert llm_resource(cfg, "flash-lite") == "gemini:flash-lite"
-    ledger = tmp_path / "q.json"
-    q = Quota(cfg, ledger)
-    for _ in range(3):
-        q.check("nvidia", 1)
-        q.record("nvidia", 1, 0.0)
-    q.record("nvidia", 0, 0.001, {"tokens_in": 10, "tokens_out": 2})
-    with pytest.raises(QuotaPaused, match="do not reset"):
-        q.check("nvidia", 1)
-    # all-time: a fresh process (new day or not) still sees the spent credits
-    q2 = Quota(cfg, ledger)
-    assert q2.used("nvidia") == 3 and json.loads(ledger.read_text())["nvidia"]["tokens_in"] == 10
-
-
-def test_nvidia_provider_kwargs_are_explicit(monkeypatch):
-    from bench.llm import api_key, provider_kwargs
-    cfg = load_config()
-    m = cfg["models"]["nemotron"]
-    monkeypatch.delenv("NVIDIA_API_KEY", raising=False)
-    monkeypatch.setenv("NVIDIA_KEY", "k")
-    assert api_key(m) == "k"
-    kw = provider_kwargs(m)
-    assert kw == {"api_base": "https://integrate.api.nvidia.com/v1", "api_key": "k"}
-    assert provider_kwargs(cfg["models"]["flash-lite"]) == {}

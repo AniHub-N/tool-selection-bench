@@ -2,14 +2,22 @@
   "run_id": "20261108T125742Z_flash-lite_oracle",
   "model": "flash-lite",
   "mode": "oracle",
-  "status": "running",
-  "experiment_hash": "3683de01553f-1221ddcb19ba",
+  "status": "paused",
+  "experiment_hash": "3683de01553f-9283f949cd5a",
   "created_at": "2026-11-08T12:57:42.344191+00:00",
   "sessions": [
     {
       "started_at": "2026-11-08T12:57:42.344191+00:00",
       "commit": "32f0c429093908bc6e9db66e5abc3c3903bde587",
       "dirty": true
+    },
+    {
+      "started_at": "2026-11-08T13:44:38.079588+00:00",
+      "commit": "a254f1736f3393df01e455272ffc781949b46023",
+      "dirty": true,
+      "ended_at": "2026-11-08T14:13:54.022007+00:00",
+      "ended_status": "paused",
+      "reason": "3 judge verdicts pending (judge quota)"
     }
   ],
   "model_id": "gemini/gemini-3.5-flash-lite",
@@ -19,5 +27,9 @@
     "tinyfish_fetch",
     "tinyfish_agent"
   ],
-  "n_cells": 130
+  "n_cells": 130,
+  "hash_migrated": {
+    "from": "3683de01553f-1221ddcb19ba",
+    "why": "task hash now covers only result-affecting fields (runlog.TASK_CORE); tasks changed only in annotations (evidence/position) since the run started"
+  }
 }

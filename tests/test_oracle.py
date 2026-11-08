@@ -138,3 +138,27 @@ def test_hand_label_used_only_for_the_exact_raw_outputs(tmp_path):
     assert can_solve(r, t, labels) is True
     stale = {"i09": {"firecrawl_scrape": {"can": True, "hand_labeled": True, "raw_refs": ["raw/old.txt"]}}}
     assert can_solve(r, t, stale) is None   # cell was re-run: label no longer applies
+
+
+def test_judge_error_becomes_pending_not_crash():
+    from bench.oracle import score_or_pending
+
+    def boom(*a, **k):
+        raise TimeoutError("judge timed out")
+    import bench.scoring as sc
+    orig = sc.judge
+    sc.judge = boom
+    try:
+        t = {"id": "j", "check_type": "judge", "question": "q", "expected_answer": "4"}
+        assert score_or_pending(t, "four", {}, None)["method"] == "judge_pending"
+    finally:
+        sc.judge = orig
+
+
+def test_datatables_record_spans_lines_but_not_rows():
+    j06 = TASKS_FILE["j06"]
+    arrays = '[\n "Airi Satou",\n "Accountant",\n "Tokyo",\n "5407",\n "2008-11-28",\n "$162,700"\n],'
+    assert evidence_present(j06, arrays) is True
+    assert evidence_present(j06, "| Airi Satou | Accountant | Tokyo | 28th Nov 08 |") is True
+    other = '[\n "Airi Satou",\n "Accountant",\n "2009-01-01"\n],\n[\n "X",\n "2008-11-28"\n]'
+    assert evidence_present(j06, other) is False   # the date belongs to the next record

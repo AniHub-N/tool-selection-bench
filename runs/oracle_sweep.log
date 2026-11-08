@@ -66,3 +66,293 @@ can=Y ext=PASS j08 firecrawl_scrape  calls=1  | According to the API description
 can=Y ext=PASS j08 tinyfish_fetch    calls=1  | According to the page, you can use the API key `special-key`
 can=? ext=PASS j09 plain_fetch       calls=2 err:empty_content | There are **4** operations listed under the 'store' tag on t
 can=? ext=PASS j09 firecrawl_scrape  calls=1  | Based on the page, there are **4** operations listed under t
+Traceback (most recent call last):
+  File "C:\Users\aniru\tool-selection-bench\.venv\Lib\site-packages\httpx\_transports\default.py", line 101, in map_httpcore_exceptions
+    yield
+  File "C:\Users\aniru\tool-selection-bench\.venv\Lib\site-packages\httpx\_transports\default.py", line 250, in handle_request
+    resp = self._pool.handle_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aniru\tool-selection-bench\.venv\Lib\site-packages\httpcore\_sync\connection_pool.py", line 256, in handle_request
+    raise exc from None
+  File "C:\Users\aniru\tool-selection-bench\.venv\Lib\site-packages\httpcore\_sync\connection_pool.py", line 236, in handle_request
+    response = connection.handle_request(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aniru\tool-selection-bench\.venv\Lib\site-packages\httpcore\_sync\connection.py", line 103, in handle_request
+    return self._connection.handle_request(request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aniru\tool-selection-bench\.venv\Lib\site-packages\httpcore\_sync\http11.py", line 136, in handle_request
+    raise exc
+  File "C:\Users\aniru\tool-selection-bench\.venv\Lib\site-packages\httpcore\_sync\http11.py", line 106, in handle_request
+    ) = self._receive_response_headers(**kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aniru\tool-selection-bench\.venv\Lib\site-packages\httpcore\_sync\http11.py", line 177, in _receive_response_headers
+    event = self._receive_event(timeout=timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aniru\tool-selection-bench\.venv\Lib\site-packages\httpcore\_sync\http11.py", line 217, in _receive_event
+    data = self._network_stream.read(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aniru\tool-selection-bench\.venv\Lib\site-packages\httpcore\_backends\sync.py", line 126, in read
+    with map_exceptions(exc_map):
+  File "C:\Users\aniru\AppData\Roaming\uv\python\cpython-3.11-windows-x86_64-none\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(typ, value, traceback)
+  File "C:\Users\aniru\tool-selection-bench\.venv\Lib\site-packages\httpcore\_exceptions.py", line 14, in map_exceptions
+    raise to_exc(exc) from exc
+httpcore.ReadTimeout: The read operation timed out
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\aniru\tool-selection-bench\.venv\Lib\site-packages\litellm\llms\custom_httpx\http_handler.py", line 1555, in post
+    response: Final = self.client.send(req, stream=stream)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aniru\tool-selection-bench\.venv\Lib\site-packages\httpx\_client.py", line 914, in send
+    response = self._send_handling_auth(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aniru\tool-selection-bench\.venv\Lib\site-packages\httpx\_client.py", line 942, in _send_handling_auth
+    response = self._send_handling_redirects(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aniru\tool-selection-bench\.venv\Lib\site-packages\httpx\_client.py", line 979, in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aniru\tool-selection-bench\.venv\Lib\site-packages\httpx\_client.py", line 1014, in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aniru\tool-selection-bench\.venv\Lib\site-packages\httpx\_transports\default.py", line 249, in handle_request
+    with map_httpcore_exceptions():
+  File "C:\Users\aniru\AppData\Roaming\uv\python\cpython-3.11-windows-x86_64-none\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(typ, value, traceback)
+  File "C:\Users\aniru\tool-selection-bench\.venv\Lib\site-packages\httpx\_transports\default.py", line 118, in map_httpcore_exceptions
+    raise mapped_exc(message) from exc
+httpx.ReadTimeout: The read operation timed out
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\aniru\tool-selection-bench\src\bench\__main__.py", line 5, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "C:\Users\aniru\tool-selection-bench\src\bench\cli.py", line 409, in main
+    return args.func(args)
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\aniru\tool-selection-bench\src\bench\cli.py", line 295, in cmd_oracle
+    return run_oracle(cfg, model, tasks, tools, tasks_path, resume=not args.new)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aniru\tool-selection-bench\src\bench\oracle.py", line 147, in run_oracle
+    print(f"[run] {e}")
+             ^^^^^^^^^^^
+  File "C:\Users\aniru\tool-selection-bench\src\bench\oracle.py", line 38, in score_or_pending
+    return score(task, answer, cfg, quota)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aniru\tool-selection-bench\src\bench\scoring.py", line 117, in score
+    low = (text or "").lower()
+        ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aniru\tool-selection-bench\src\bench\scoring.py", line 101, in judge
+    counted as a tool failure."""
+          ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aniru\tool-selection-bench\src\bench\llm.py", line 78, in complete
+    resp = retry_call(call, _retry_hint, retries=retries)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aniru\tool-selection-bench\src\bench\ratelimit.py", line 69, in retry_call
+    return fn()
+           ^^^^
+  File "C:\Users\aniru\tool-selection-bench\src\bench\llm.py", line 71, in call
+    return litellm.completion(model=m["id"], messages=messages,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aniru\tool-selection-bench\.venv\Lib\site-packages\litellm\chat_completions\dispatch.py", line 91, in completion
+    return _DISPATCH.run(
+           ^^^^^^^^^^^^^^
+  File "C:\Users\aniru\tool-selection-bench\.venv\Lib\site-packages\litellm\rust_bridge\dispatch.py", line 81, in run
+    return python(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aniru\tool-selection-bench\.venv\Lib\site-packages\litellm\utils.py", line 2039, in wrapper
+    raise e
+  File "C:\Users\aniru\tool-selection-bench\.venv\Lib\site-packages\litellm\utils.py", line 1890, in wrapper
+    result = original_function(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aniru\tool-selection-bench\.venv\Lib\site-packages\litellm\main.py", line 6236, in completion
+    raise exception_type(
+  File "C:\Users\aniru\tool-selection-bench\.venv\Lib\site-packages\litellm\main.py", line 6155, in completion
+    response = _complete_vertex_ai_beta(_dispatch_ctx)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aniru\tool-selection-bench\.venv\Lib\site-packages\litellm\main.py", line 3686, in _complete_vertex_ai_beta
+    return vertex_chat_completion.completion(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aniru\tool-selection-bench\.venv\Lib\site-packages\litellm\llms\vertex_ai\gemini\vertex_and_google_ai_studio_gemini.py", line 3410, in completion
+    first_response: Final = post(data)
+                            ^^^^^^^^^^
+  File "C:\Users\aniru\tool-selection-bench\.venv\Lib\site-packages\litellm\llms\vertex_ai\gemini\vertex_and_google_ai_studio_gemini.py", line 3392, in post
+    response: Final = client.post(
+                      ^^^^^^^^^^^^
+  File "C:\Users\aniru\tool-selection-bench\.venv\Lib\site-packages\litellm\llms\custom_httpx\http_handler.py", line 1561, in post
+    raise litellm.Timeout(
+litellm.exceptions.Timeout: litellm.Timeout: Connection timed out after None seconds.
+exit 1
+[quota] preflight for oracle flash-lite: 130 task x tool cells
+[quota]   firecrawl live: 1371 credits remaining (plan 1000, period ends 2026-11-29T13:41:58.019Z)
+[quota]   tinyfish live: wallet $10.95
+[quota]   resource                estimate      used   stop at
+[quota]   plain_fetch                    0         0         -
+[quota]   firecrawl_scrape             230        29       800
+[quota]   tinyfish_fetch                40        34       900
+[quota]   tinyfish_agent               0.8     0.048       6.0
+[quota]   gemini:flash-lite            520       177       900
+[quota]   gemini:flash                  15        16        18  <- will pause partway; rerun the same command to resume
+[quota]   list-price total so far: $0.3444 (actual spend: $0)
+[run] resuming 20261108T125742Z_flash-lite_oracle (56 records so far)
+can=? ext=PASS j09 tinyfish_fetch    calls=2  | There are **4** operations listed under the 'store' tag on t
+can=n ext=fail j10 plain_fetch       calls=2  | The author of the last quote on that page is **Douglas Adams
+can=Y ext=PASS j10 firecrawl_scrape  calls=1  | The author of the last quote on the page is **Allen Saunders
+can=n ext=fail j10 tinyfish_fetch    calls=1  | The author of the last quote on the page is **Elie Wiesel**.
+can=Y ext=PASS p01 plain_fetch       calls=1  | In the Bitcoin whitepaper's table of attacker success probab
+can=Y ext=PASS p01 firecrawl_scrape  calls=1  | In the Bitcoin whitepaper, according to the table of attacke
+can=Y ext=PASS p01 tinyfish_fetch    calls=1  | In the Bitcoin whitepaper, for $q=0.1$ and $z=5$, the attack
+can=Y ext=PASS p02 plain_fetch       calls=1  | According to **Table 2** in the paper (found on Page 8), the
+can=Y ext=PASS p02 firecrawl_scrape  calls=1  | According to Table 2 in the paper, the training cost (in FLO
+can=Y ext=PASS p02 tinyfish_fetch    calls=1  | According to Table 2 in the paper, the training cost (in FLO
+can=Y ext=PASS p03 plain_fetch       calls=1  | Based on **Table 1** (found on page 6 of the paper), BERT-LA
+can=Y ext=PASS p03 firecrawl_scrape  calls=1  | Based on Table 1 ("GLUE Test results") in the paper, **BERT-
+can=Y ext=PASS p03 tinyfish_fetch    calls=2  | According to Table 1 in the paper, **BERT-LARGE** achieved a
+can=Y ext=PASS p04 plain_fetch       calls=1  | Based on **Table 2** (found on page 5 of the paper), the top
+can=Y ext=PASS p04 firecrawl_scrape  calls=1  | According to Table 2 ("Top-1 error (%, 10-crop testing) on I
+can=Y ext=PASS p04 tinyfish_fetch    calls=2  | Based on Table 2 in the paper, the 34-layer plain network ac
+can=Y ext=PASS p05 plain_fetch       calls=1  | According to Table 2 ("Segmentation results (IOU) on the ISB
+can=Y ext=PASS p05 firecrawl_scrape  calls=1  | According to Table 2 ("Segmentation results (IOU) on the ISB
+can=Y ext=PASS p05 tinyfish_fetch    calls=1  | Based on Table 2 ("Segmentation results (IOU) on the ISBI ce
+can=Y ext=PASS p06 plain_fetch       calls=1  | According to Table 1 in the paper, adversarial nets got a Pa
+can=Y ext=PASS p06 firecrawl_scrape  calls=1  | According to Table 1 in the paper, adversarial nets got a Pa
+can=Y ext=PASS p06 tinyfish_fetch    calls=1  | Based on **Table 1** in the paper, the Parzen window-based l
+can=Y ext=PASS p07 plain_fetch       calls=3 err:http_404 | According to the manuscript, the pre-ALGOL meeting where Hei
+can=Y ext=PASS p07 firecrawl_scrape  calls=1  | According to the manuscript, the pre-ALGOL meeting where Hei
+can=Y ext=PASS p07 tinyfish_fetch    calls=2  | According to the manuscript, the pre-ALGOL meeting where Hei
+can=Y ext=PASS p08 plain_fetch       calls=1  | According to Table 1 (page 9) and Table 2 (page 10) of the D
+can=Y ext=PASS p08 firecrawl_scrape  calls=1  | Based on Table 1 (Consumer Price Index for All Urban Consume
+can=Y ext=PASS p08 tinyfish_fetch    calls=3 err:target_unreachable | According to the Consumer Price Index report for December 20
+can=Y ext=PASS p09 plain_fetch       calls=1  | According to the table in Figure 3 of the paper, BN-x5 neede
+can=Y ext=PASS p09 firecrawl_scrape  calls=1  | According to the table in Figure 3 of the paper, BN-x5 requi
+can=Y ext=PASS p09 tinyfish_fetch    calls=1  | Per the table in **Figure 3**, **BN-x5** needed **$2.1 \time
+can=Y ext=pend p10 plain_fetch       calls=2  | Based on **Table 3** in the paper ("Comparison of architectu
+can=Y ext=pend p10 firecrawl_scrape  calls=1  | Based on Table 3 in the paper ("Comparison of architectures 
+can=Y ext=pend p10 tinyfish_fetch    calls=1  | Based on Table 3 ("Comparison of architectures using models 
+can=Y ext=PASS i01 plain_fetch       calls=2  | The price of the Lando Gym Jacket is **$99.00**.
+can=Y ext=PASS i01 firecrawl_scrape  calls=2  | The price of the Lando Gym Jacket is **$99.00**.
+can=n ext=fail i01 tinyfish_fetch    calls=3  | 
+can=Y ext=PASS i01 tinyfish_agent    calls=1  | The price of the Lando Gym Jacket is $99.
+can=n ext=fail i02 plain_fetch       calls=3 err:http_404 | 
+can=n ext=fail i02 firecrawl_scrape  calls=3 err:target_http_404 | 
+can=n ext=fail i02 tinyfish_fetch    calls=3 err:page_not_found (status 404) | 
+can=Y ext=PASS i02 tinyfish_agent    calls=1  | The 2010 film on that page with 3 nominations and 2 awards i
+can=Y ext=PASS i03 plain_fetch       calls=1  | Based on the search results for the Toronto Maple Leafs in 1
+can=Y ext=PASS i03 firecrawl_scrape  calls=2  | Using the team search for the Toronto Maple Leafs in 1995, t
+can=Y ext=PASS i03 tinyfish_fetch    calls=3  | Based on the team search for the Toronto Maple Leafs in 1995
+can=Y ext=PASS i03 tinyfish_agent    calls=1  | The Toronto Maple Leafs had **247** Goals For (GF) in 1995.
+can=Y ext=PASS i04 plain_fetch       calls=1  | The author of the first quote on page 4 of the site is **Dr.
+can=Y ext=PASS i04 firecrawl_scrape  calls=1  | The author of the first quote on page 4 of quotes.toscrape.c
+can=Y ext=PASS i04 tinyfish_fetch    calls=1  | The author of the first quote on page 4 of the site is **Dr.
+can=Y ext=PASS i04 tinyfish_agent    calls=1  | The author of the first quote on page 4 of the site is **Dr.
+can=Y ext=PASS i05 plain_fetch       calls=2  | There are **110** books in the Nonfiction category on Books 
+can=Y ext=PASS i05 firecrawl_scrape  calls=2  | There are **110** books in the Nonfiction category on this s
+can=n ext=fail i05 tinyfish_fetch    calls=3  | 
+can=Y ext=PASS i05 tinyfish_agent    calls=1  | There are **110 books** in the Nonfiction category on Books 
+can=Y ext=PASS i06 plain_fetch       calls=2  | The UPC of the book 'Sharp Objects' on Books to Scrape is **
+can=Y ext=PASS i06 firecrawl_scrape  calls=2  | The UPC of the book 'Sharp Objects' on the site is **e00eb4f
+can=n ext=fail i06 tinyfish_fetch    calls=3 err:page_not_found (status 404) | 
+can=Y ext=PASS i06 tinyfish_agent    calls=2  | The UPC of the book 'Sharp Objects' on Books to Scrape is **
+can=Y ext=PASS i07 plain_fetch       calls=2  | Zenaida Frank's extension number is **7439**.
+can=Y ext=PASS i07 firecrawl_scrape  calls=1  | Zenaida Frank's extension number is **7439**.
+can=Y ext=PASS i07 tinyfish_fetch    calls=2  | Zenaida Frank's extension number is **7439**.
+can=Y ext=PASS i07 tinyfish_agent    calls=1  | Zenaida Frank's extension number is **7439**.
+can=n ext=PASS i08 plain_fetch       calls=2  | Zorita Serrano's start date in the table is **2012-06-01**.
+can=n ext=PASS i08 firecrawl_scrape  calls=2  | According to the data source for this table, Zorita Serrano'
+can=n ext=fail i08 tinyfish_fetch    calls=3 err:page_not_found (status 404) err:page_not_found (status 404) | 
+can=Y ext=PASS i08 tinyfish_agent    calls=1  | Zorita Serrano's start date is **June 1, 2012** (2012-06-01)
+can=? ext=fail i09 plain_fetch       calls=3  | There are **8** quotes on the site tagged with 'humor' in to
+can=? ext=PASS i09 firecrawl_scrape  calls=3  | There are **12** quotes on the site tagged with 'humor' in t
+can=? ext=fail i09 tinyfish_fetch    calls=3  | There are **13** quotes on the site tagged with 'humor' in t
+can=n ext=fail i09 tinyfish_agent    calls=2  | Based on the site structure, each page displays 10 quotes. T
+can=Y ext=PASS i10 plain_fetch       calls=3  | The price of the **Geo Insulated Jogging Pant** on this site
+can=Y ext=PASS i10 firecrawl_scrape  calls=3  | The price of the **Geo Insulated Jogging Pant** on this site
+can=n ext=fail i10 tinyfish_fetch    calls=3  | 
+can=Y ext=PASS i10 tinyfish_agent    calls=1  | The price of the **Geo Insulated Jogging Pant** is **$51**.
+[oracle] 3 judge verdicts pending; rerun after the judge quota resets.
+Each cell: **can** (oracle: answer present in the raw tool output; Y / n / ? = presence can't decide) then **ext** (Flash-Lite's final answer PASS / fail).
+
+| task | cat | plain | firecrawl | tf_fetch | tf_agent | flags |
+|---|---|---|---|---|---|---|
+| s01 | static | Y PASS | Y PASS | Y PASS | - |  |
+| s02 | static | Y PASS | Y PASS | Y PASS | - |  |
+| s03 | static | Y PASS | Y PASS | Y PASS | - |  |
+| s04 | static | Y PASS | Y PASS | Y PASS | - | memorized, known_answer |
+| s05 | static | Y PASS T | Y PASS T | Y PASS T | - |  |
+| s06 | static | Y PASS | Y PASS | Y PASS | - |  |
+| s07 | static | Y PASS | Y PASS | Y PASS | - |  |
+| s08 | static | Y PASS | Y PASS | Y PASS | - |  |
+| s09 | static | Y PASS | Y PASS | Y PASS | - |  |
+| s10 | static | Y PASS | Y PASS | Y PASS | - |  |
+| j01 | js_heavy | Y PASS | Y PASS | n fail | - |  |
+| j02 | js_heavy | n PASS | n PASS | n PASS | - |  |
+| j03 | js_heavy | n fail | n fail | n fail | - |  |
+| j04 | js_heavy | n fail E | Y PASS | Y PASS | - |  |
+| j05 | js_heavy | Y PASS | Y PASS | n fail | - |  |
+| j06 | js_heavy | Y PASS | Y PASS | Y PASS | - | memorized |
+| j07 | js_heavy | n PASS | n PASS | n PASS | - | memorized |
+| j08 | js_heavy | Y PASS E | Y PASS | Y PASS | - | memorized, known_answer |
+| j09 | js_heavy | ? PASS E | ? PASS | ? PASS | - | aggregate |
+| j10 | js_heavy | n fail | Y PASS | n fail | - |  |
+| p01 | pdf | Y PASS | Y PASS | Y PASS | - |  |
+| p02 | pdf | Y PASS | Y PASS | Y PASS | - |  |
+| p03 | pdf | Y PASS | Y PASS | Y PASS T | - | memorized, known_answer |
+| p04 | pdf | Y PASS | Y PASS T | Y PASS T | - |  |
+| p05 | pdf | Y PASS | Y PASS | Y PASS | - |  |
+| p06 | pdf | Y PASS | Y PASS | Y PASS | - |  |
+| p07 | pdf | Y PASS E | Y PASS | Y PASS | - |  |
+| p08 | pdf | Y PASS | Y PASS | Y PASS E T | - | memorized |
+| p09 | pdf | Y PASS | Y PASS T | Y PASS | - |  |
+| p10 | pdf | Y pend | Y pend | Y pend | - |  |
+| i01 | interactive | Y PASS | Y PASS | n fail | Y PASS | not_url_nav |
+| i02 | interactive | n fail E | n fail E | n fail E | Y PASS | not_url_nav |
+| i03 | interactive | Y PASS | Y PASS | Y PASS | Y PASS | url_nav |
+| i04 | interactive | Y PASS | Y PASS | Y PASS | Y PASS | url_nav |
+| i05 | interactive | Y PASS | Y PASS | n fail | Y PASS | url_nav |
+| i06 | interactive | Y PASS | Y PASS | n fail E | Y PASS | url_nav |
+| i07 | interactive | Y PASS | Y PASS | Y PASS | Y PASS | url_nav |
+| i08 | interactive | Y PASS | Y PASS | n fail E | Y PASS | memorized, known_answer, url_nav |
+| i09 | interactive | ? fail | ? PASS | ? fail | n fail | aggregate, url_nav |
+| i10 | interactive | Y PASS | Y PASS | n fail | Y PASS | tight_call_budget, url_nav |
+
+Flags: H = `can` hand-labeled from the saved raw outputs (tasks/oracle_hand_labels.json), B = bot/challenge page seen, E = a tool call errored, T = output truncated to max_content_chars before the model saw it, F? = format_suspect (hand-review).
+
+**can solve (oracle)**
+
+| tool | static | js_heavy | pdf | interactive | total |
+|---|---|---|---|---|---|
+| plain | 10/10 | 4/9 (+1?) | 10/10 | 8/9 (+1?) | 32/38 (+2?) |
+| firecrawl | 10/10 | 6/9 (+1?) | 10/10 | 8/9 (+1?) | 34/38 (+2?) |
+| tf_fetch | 10/10 | 3/9 (+1?) | 10/10 | 3/9 (+1?) | 26/38 (+2?) |
+| tf_agent | - | - | - | 9/10 | 9/10 |
+
+**Flash-Lite extraction pass**
+
+| tool | static | js_heavy | pdf | interactive | total |
+|---|---|---|---|---|---|
+| plain | 10/10 | 7/10 | 9/9 (+1?) | 8/10 | 34/39 (+1?) |
+| firecrawl | 10/10 | 9/10 | 9/9 (+1?) | 9/10 | 37/39 (+1?) |
+| tf_fetch | 10/10 | 6/10 | 9/9 (+1?) | 3/10 | 28/39 (+1?) |
+| tf_agent | - | - | - | 9/10 | 9/10 |
+
+**Extraction misses** (tool delivered the answer, Flash-Lite still failed): none
+**Answered without evidence** (can=n but ext=PASS: memory or guess): j02/plain, j02/firecrawl, j02/tf_fetch, j07/plain, j07/firecrawl, j07/tf_fetch
+
+| tool | tool calls | errors | blocked | firecrawl credits | agent steps | agent USD | median latency s |
+|---|---|---|---|---|---|---|---|
+| plain | 66 | 5 | 0 | - | - | - | 1.0 |
+| firecrawl | 56 | 1 | 0 | 137.0 | - | - | 1.3 |
+| tf_fetch | 72 | 5 | 0 | - | - | - | 1.3 |
+| tf_agent | 12 | 0 | 0 | - | 53 | $0.848 | 23.6 |
+
+LLM requests (agent, excl. judge): 336; tokens in/out: 823379/11952
+
+[quota] this session: list-price $1.6078, actual $0
+logs: C:\Users\aniru\tool-selection-bench\runs\20261108T125742Z_flash-lite_oracle
+exit 3

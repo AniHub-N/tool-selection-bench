@@ -392,3 +392,36 @@ check and writes `tasks/plain_visibility.json`.
 - Run resume hashes only result-affecting task fields (`runlog.TASK_CORE`: id, category, url,
   question, expected_answer, check_type, pattern, value). Annotation edits (evidence, flags) no
   longer block resuming.
+
+## Oracle sweep results (2026-11-08, run 20261108T125742Z_flash-lite_oracle)
+
+- 130 cells complete; p10 × 3 have `can`=Y but the judge verdict is pending (Flash judge hit its
+  18/day stop). Rerun `python -m bench oracle` after midnight Pacific: it only re-judges.
+- Crash mid-sweep: a Flash judge call raised `litellm.Timeout`, which the retry logic didn't
+  treat as retryable, and the exception killed the run at cell 58. Fixed: Timeout is retryable,
+  LLM calls default to a 120 s timeout, and judge failures become `judge_pending`. Resumed; one
+  cell (j09/firecrawl) was re-run. The run's stored hash was migrated to the new
+  annotation-insensitive task hash (recorded in meta.json `hash_migrated`).
+- Evidence pattern fix after reading raw outputs: the DataTables patterns assumed one table row
+  per line, but `arrays.txt` (the AJAX source all three tools reached) puts each field on its own
+  line. Now `REC`: same line or same JSON record (stops at "]"). j06 and i08 flipped n -> Y.
+- **Content loss inside tools, seen in the raw outputs (not model errors):**
+  - plain_fetch (readability): drops quote blocks on quotes.toscrape: tag/humor 7 of 10,
+    tag/humor/page/2 1 of 2, /page/2/ 5 of 10. It made Flash-Lite answer 8 on i09 and "Douglas
+    Adams" on j10 (from /page/2/). This is our baseline's extraction step, not the site.
+  - tinyfish_fetch: /js/page/2/ returned 3 of 10 quotes; books.toscrape listing pages come back
+    as prices only (no titles); the Swagger UI's store operations are collapsed. Not blocked; the
+    output is just partial.
+- **No bot/Cloudflare blocks detected** on any call (0 challenge-page markers), including
+  scrapingcourse.com.
+- Routes that differ from the start URL but count under data reachability: p07 (plain and
+  TinyFish found the EWD215.html transcription; Firecrawl OCR'd the scanned PDF itself), j05
+  (product page), j06/i08 (arrays.txt), j09 (swagger.json), j01 plain (the non-JS homepage holds
+  the same quote and tags).
+- Empty final answers: in every cell that hit the 3-call cap without the tool delivering the
+  answer, Flash-Lite's forced final turn (tool_choice="none") returned empty text instead of "I
+  don't know". Scored as a fail; it never coincides with can=Y.
+- Quota this sweep: Firecrawl 141 credits (live 1,399 -> 1,258); TinyFish Fetch 78 URLs (free
+  1,000/day); TinyFish agent 12 calls, 53 steps, $0.848 (ledger total $0.896 of the $6 cap; wallet
+  $10.95 -> $10.10); Flash-Lite 376 requests today (stop at 900); Flash 18/18 (judge). Actual
+  spend $0; list price ~$1.61.

@@ -1,0 +1,64 @@
+{
+  "_about": "Hand labels for the oracle's `can` on aggregate tasks (presence can't decide them). Each label applies only to the exact raw outputs listed (raw_refs); a re-run cell reverts to '?'.",
+  "_labeled_on": "2026-11-08",
+  "_run": "20261108T125742Z_flash-lite_oracle",
+  "i09": {
+    "plain_fetch": {
+      "can": false,
+      "hand_labeled": true,
+      "note": "tag/humor/ output has only 7 of the page's 10 quotes and page/2/ has 1 of 2 (readability dropped quote blocks); page/3/ is empty. The raw output supports 8, not 12.",
+      "raw_refs": [
+        "raw/26d62cda15aa4541.txt",
+        "raw/2d3d15250c56ed8a.txt",
+        "raw/bb1bbd3ae033c5af.txt"
+      ]
+    },
+    "firecrawl_scrape": {
+      "can": true,
+      "hand_labeled": true,
+      "note": "tag/humor/ has all 10 quotes and page/2/ has the remaining 2: 12 humor quotes in the raw output.",
+      "raw_refs": [
+        "raw/275ba3cfa1c7af40.txt",
+        "raw/4485f5f47e338878.txt",
+        "raw/80d71c91ca2797ef.txt"
+      ]
+    },
+    "tinyfish_fetch": {
+      "can": true,
+      "hand_labeled": true,
+      "note": "tag/humor/ has all 10 quotes and page/2/ has 2: 12 in the raw output (the model answered 13: an extraction miss, likely counting a homepage quote).",
+      "raw_refs": [
+        "raw/34e5056847c8fbe8.txt",
+        "raw/96a98977182c5552.txt",
+        "raw/e06f140c1fb76f08.txt"
+      ]
+    }
+  },
+  "j09": {
+    "plain_fetch": {
+      "can": true,
+      "hand_labeled": true,
+      "note": "UI page came back empty (JS-rendered), but /v2/swagger.json is the full spec: store paths /store/inventory GET, /store/order POST, /store/order/{orderId} GET+DELETE = 4 operations.",
+      "raw_refs": [
+        "raw/bb116730d391e330.txt"
+      ]
+    },
+    "firecrawl_scrape": {
+      "can": true,
+      "hand_labeled": true,
+      "note": "Rendered Swagger UI lists the store tag with GET /store/inventory, POST /store/order, GET and DELETE /store/order/{orderId} = 4.",
+      "raw_refs": [
+        "raw/19f78355436373a8.txt"
+      ]
+    },
+    "tinyfish_fetch": {
+      "can": true,
+      "hand_labeled": true,
+      "note": "UI output shows the store tag collapsed (no operations), but /v2/swagger.json is the full spec with the same 4 store operations.",
+      "raw_refs": [
+        "raw/1f6b2fae30be4e3b.txt",
+        "raw/ea75ae3321f2fc57.txt"
+      ]
+    }
+  }
+}

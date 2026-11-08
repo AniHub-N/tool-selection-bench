@@ -242,6 +242,9 @@ VALUES = {
 # can't decide it, so the oracle reports "?" for fetch tools (the agent's answer is still checked).
 # Patterns are validated by hand against the saved raw outputs after the sweep (NOTES.md).
 PRICE = r"[^$]{0,300}\$\s?%s(?:\.00)?(?!\.?\d)"   # the first price after the product name
+# A DataTables record: the same table row (one markdown line), or the same JSON array record,
+# which spans lines in arrays.txt / server_processing.php. Stops at "]" so it can't reach the next row.
+REC = r"%s(?:[^\n]{0,300}?|[^\]]{0,300}?)"
 EVIDENCE = {
     "s02": {"all": [r"In stock \(20 available\)"]},
     "s05": {"all": [r"\b16\W+2\W+The database page size"]},
@@ -251,8 +254,8 @@ EVIDENCE = {
     "j03": {"all": [rf"Douglas Adams[\s\S]{{0,400}}?{t}" for t in ("life", "navigation")]},
     "j04": {"all": ["Grayson Crewneck Sweatshirt" + PRICE % "64"]},
     "j05": {"all": ["Kenobi Trail Jacket" + PRICE % "47"]},
-    "j06": {"all": [r"Airi Satou[^\n]{0,300}(?:2008[/-]11[/-]28|28th Nov 08)"]},
-    "j07": {"all": [r"Caesar Vance[^\n]{0,300}(?:2011[/-]12[/-]12|12th Dec 11)"]},
+    "j06": {"all": [REC % "Airi Satou" + r"(?:2008[/-]11[/-]28|28th Nov 08)"]},
+    "j07": {"all": [REC % "Caesar Vance" + r"(?:2011[/-]12[/-]12|12th Dec 11)"]},
     "j09": {"aggregate": "count of store operations"},
     "p06": {"all": [r"\b225\s*(?:±|\+/?-)\s*2\b"]},
     "p08": {"all": [r"Motor vehicle insurance[^\n]{0,200}\b1\.5\b"]},
@@ -260,8 +263,8 @@ EVIDENCE = {
     "i01": {"all": ["Lando Gym Jacket" + PRICE % "99"]},
     "i03": {"all": [r"Toronto Maple Leafs\W+1995\W+(?:[\d.]+\W+){3,4}247\b"]},
     "i05": {"all": [r"\b110\b\W*results?"]},
-    "i07": {"all": [r"Zenaida Frank[\s\S]{0,400}?\b7439\b"]},
-    "i08": {"all": [r"Zorita Serrano[^\n]{0,300}(?:2012[/-]0?6[/-]0?1|1st Jun 12)"]},
+    "i07": {"all": [REC % "Zenaida Frank" + r"\b7439\b"]},
+    "i08": {"all": [REC % "Zorita Serrano" + r"(?:2012[/-]0?6[/-]0?1|1st Jun 12)"]},
     "i09": {"aggregate": "count of quotes tagged humor across pages"},
     # Position questions: the right page must have been fetched (URL) AND the name must sit at the
     # asked position in that output's ordered author list. "this page" = exactly that URL; "page 4

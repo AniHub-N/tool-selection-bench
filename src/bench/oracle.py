@@ -32,7 +32,8 @@ EXIT_PAUSED = 3
 
 
 def score_or_pending(task: dict, answer: str | None, cfg: dict, quota: Quota) -> dict[str, Any]:
-    """Score; if only the judge's quota is out, mark judge_pending instead of stopping the sweep."""
+    """Score; if the judge is out of quota or keeps failing, mark judge_pending instead of
+    stopping the sweep. Rerunning `oracle` re-judges pending rows without calling tools."""
     from .scoring import score
     try:
         return score(task, answer, cfg, quota)
@@ -40,6 +41,10 @@ def score_or_pending(task: dict, answer: str | None, cfg: dict, quota: Quota) ->
         if task["check_type"] != "judge":
             raise
         return {"correct": None, "method": "judge_pending", "reason": str(e)[:200]}
+    except Exception as e:  # judge timed out / errored after retries: re-judge on the next run
+        if task["check_type"] != "judge":
+            raise
+        return {"correct": None, "method": "judge_pending", "reason": f"{type(e).__name__}: {str(e)[:180]}"}
 
 
 def merged_for(tasks: list[dict], runs_dir: Path = RUNS_DIR) -> list[dict]:

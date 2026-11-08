@@ -29,7 +29,7 @@ litellm.drop_params = True  # e.g. drop `seed` if the provider doesn't accept it
 def _retry_hint(e: Exception) -> float | None:
     """Seconds to wait for a retryable error, 0 for default backoff, None to give up.
     Daily-quota 429s are not retryable: they pause the run instead."""
-    if not isinstance(e, (litellm.RateLimitError, litellm.ServiceUnavailableError,
+    if not isinstance(e, (litellm.RateLimitError, litellm.ServiceUnavailableError, litellm.Timeout,
                           litellm.InternalServerError, litellm.APIConnectionError)):
         return None
     msg = str(e)
@@ -52,7 +52,7 @@ def api_key(m: dict[str, Any]) -> str | None:
 
 def complete(name: str, cfg: dict[str, Any], quota: Quota, messages: list[dict],
              tools: list[dict] | None = None, tool_choice: str | None = None,
-             retries: int = 4, timeout_s: float | None = None) -> dict[str, Any]:
+             retries: int = 4, timeout_s: float | None = 120) -> dict[str, Any]:
     """One chat completion. Returns {message, usage: {in, out}, list_usd, model}."""
     m = cfg["models"][name]
     resource = llm_resource(cfg, name)

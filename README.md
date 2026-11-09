@@ -75,7 +75,7 @@ It runs 40 tasks with checkable answers and scores two things. First, whether ea
 
 **5. The browser agent was expensive and rarely chosen.** In free choice it handled 25 of 189 tool calls, using 121 steps (about $1.94 at list price, paid from TinyFish signup credit). It was the first pick in only 3 of 120 rows.
 
-**6. Brand names barely matter; the cost/JS cue in the description does.** With the tools renamed `tool_1`…`tool_4` and brands stripped from the descriptions (40 tasks × 1 rep):
+**6. Brand names barely matter.** With the tools renamed `tool_1`…`tool_4` and brands stripped from the descriptions (40 tasks × 1 rep):
 - The first pick could solve the task in **33/40 (82%)**, vs 85% with names. It was oracle-best in 27/40 (68%), vs 75%.
 - Plain fetch is still the first pick in 31/40 rows.
 - The shift is on JS-heavy tasks: without names, the model moved some first picks from plain fetch to `tool_3` (TinyFish Fetch, 4 of 10). That's the weakest JS tool in the oracle, so JS selection got slightly worse (5/10, vs 18/30).

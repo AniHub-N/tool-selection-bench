@@ -1,0 +1,30 @@
+=== Mon Nov  9 08:49:56 UTC 2026 anon ablation ===
+[quota] preflight for flash-lite anon x1
+[quota]   firecrawl live: 1219 credits remaining (plan 1000, period ends 2026-11-29T13:41:58.019Z)
+[quota]   tinyfish live: wallet $7.83
+[quota]   resource                estimate      used   stop at
+[quota]   gemini:flash-lite            160       198       475
+[quota]   gemini:flash                   5        18        18  <- will pause partway; rerun the same command to resume
+[quota]   list-price total so far: $4.6101 (actual spend: $0)
+[run] new run 20261109T085011Z_flash-lite_anon
+correct   s01 r0 [plain] The UPC of this book is **a897fe39b1053632**.
+correct   s02 r0 [plain] There are **20** copies of this book listed as available.
+correct   s03 r0 [plain] The page lists the population of Anguilla as **13,254**.
+correct   s04 r0 [plain] For SQLite versions after 3.32.0, the default value of `SQLITE_MAX_VARIABLE_NUMB
+pending   s05 r0 [plain] In the SQLite database file header, the 2-byte field at **offset 16** stores **t
+correct   s06 r0 [plain] In PostgreSQL 16, the scale in a `numeric` type declaration is permitted to be a
+correct   s07 r0 [plain] According to PostgreSQL 16 documentation (Table 8.9: Date/Time Types), the high 
+correct   s08 r0 [plain] According to the table, the Boston Bruins had **44** wins in 1990.
+correct   s09 r0 [plain] The name of the blacksmith in the passage is **Perth**.
+correct   s10 r0 [plain] HTCPCP/1.0 (RFC 2324) defines the **`Accept-Additions`** request header field fo
+pending   j01 r0 [tff,agent] The tags attached to the Jane Austen quote on the page (`quotes.toscrape.com/js/
+abstained j02 r0 [tff,fc,agent] 
+pending   j03 r0 [plain,tff,agent] The tags attached to the Douglas Adams quote ("I may not have gone where I inten
+correct   j04 r0 [tff] The price of the Grayson Crewneck Sweatshirt on that page is **$64**.
+correct   j05 r0 [fc,agent] The price of the Kenobi Trail Jacket is **$47**.
+correct   j06 r0 [plain,agent] Airi Satou's start date in the table is **2008/11/28** (November 28, 2008).
+correct   j07 r0 [plain,fc] Caesar Vance's start date in the table is **12th Dec 11**.
+correct   j08 r0 [plain,fc] According to the API description on the page, you can use the API key **`special
+pending   j09 r0 [tff,agent] There are **4** operations listed under the 'store' tag:  1. **GET `/store/inven
+wrong     j10 r0 [plain,tff] The author of the last quote on that page is **Elie Wiesel**.
+correct   p01 r0 [plain] According to the Bitcoin whitepaper (Page 8), in the table of attacker success p

@@ -41,7 +41,7 @@ def test_score_uses_judge_only_for_judge_tasks():
     assert s["correct"] is True and s["method"] == "judge" and len(calls) == 1
     assert "life, navigation" in calls[0][0]["content"]  # reference goes into the fixed rubric
     s = score(T_CONTAINS, "Perth", cfg, quota=None, complete=complete)
-    assert s == {"correct": True, "method": "contains"} and len(calls) == 1
+    assert s == {"correct": True, "outcome": "correct", "method": "contains"} and len(calls) == 1
 
 
 def test_score_skips_judge_on_empty_answer():
@@ -59,3 +59,23 @@ def test_route_taken():
     assert route_taken({"tool_calls": [same, other]}, task) == "url_route"
     agent = {"tool": "tinyfish_agent", "args": {"url": task["url"], "goal": "find"}}
     assert route_taken({"tool_calls": [other, agent]}, task) == "browser_agent"
+
+
+def test_abstained_is_separate_from_wrong():
+    from bench.scoring import outcome_of
+    complete, calls = _fake_complete('{"verdict": "incorrect", "reason": "x"}')
+    cfg = {"judge": {"model": "flash"}}
+    for empty in (None, "", "  \n"):
+        for t in (T_JUDGE, T_CONTAINS):
+            sc = score(t, empty, cfg, quota=None, complete=complete)
+            assert sc["outcome"] == "abstained" and sc["correct"] is False
+    assert not calls  # abstentions never reach the judge
+    assert score(T_CONTAINS, "Sydney", cfg, quota=None, complete=complete)["outcome"] == "wrong"
+    assert score(T_JUDGE, "life only", cfg, quota=None, complete=complete)["outcome"] == "wrong"
+    # an explicit "can't find it" is an answer, graded wrong, not an abstention
+    assert score(T_CONTAINS, "I could not find this.", cfg, quota=None, complete=complete)["outcome"] == "wrong"
+    # old rows without `outcome`
+    assert outcome_of({"correct": False, "method": "contains"}, "") == "abstained"
+    assert outcome_of({"correct": False, "method": "judge_skipped_empty"}, None) == "abstained"
+    assert outcome_of({"correct": False, "method": "contains"}, "Sydney") == "wrong"
+    assert outcome_of({"correct": None, "method": "judge_pending"}, "x") == "pending"

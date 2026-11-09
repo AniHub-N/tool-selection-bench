@@ -15,6 +15,7 @@ from pathlib import Path
 from .config import ROOT, TASKS_DIR, load_config
 from .quota import Quota, QuotaPaused, llm_resource
 from .runlog import ResumeConflict, RunDir
+from .oracle import raw_sink
 from .tools import load_tools
 
 EXIT_PAUSED = 3
@@ -132,7 +133,19 @@ def cmd_tasks_check(args: argparse.Namespace) -> int:
     return 0
 
 
-MODES_READY = {"no_tools"}
+MODES_READY = {"no_tools", "free", "anon"}
+
+# Ablation "anon": same tools, same order, but generic names, and descriptions with the brand
+# names removed. Capability facts are kept word for word (they're not branding). Kept in code, not
+# config, so adding it after the oracle didn't change the experiment hash the oracle merges on.
+ANON_NAMES = {"plain_fetch": "tool_1", "firecrawl_scrape": "tool_2", "tinyfish_fetch": "tool_3",
+              "tinyfish_agent": "tool_4"}
+ANON_DESC = {
+    "plain_fetch": "Fetch a URL with a plain HTTP GET and return the main text as Markdown. Does not run JavaScript. PDFs are converted to text.",
+    "firecrawl_scrape": "Fetch a URL and return the page as Markdown. Runs JavaScript before extracting. PDFs are converted to text.",
+    "tinyfish_fetch": "Fetch a URL and return the page as Markdown. Runs JavaScript before extracting.",
+    "tinyfish_agent": "Give a browser agent a start URL and a goal in plain language. It can click, scroll, paginate and fill forms (up to 5 steps), then returns what it found.",
+}
 
 
 def latest_results(run: RunDir) -> list[dict]:
@@ -144,11 +157,15 @@ def latest_results(run: RunDir) -> list[dict]:
 
 
 def cmd_run(args: argparse.Namespace) -> int:
-    """Agent run. Phase 3 so far: --mode no_tools (zero tools; measures memorization)."""
+    """Agent run. --mode no_tools (zero tools; memorization) or free (every enabled tool, in
+    config order, with the neutral descriptions; the model picks). Same system prompt as the
+    oracle sweep. Judge verdicts that hit the judge quota are stored as pending and re-judged
+    (no tool calls) when the same command is rerun."""
     from collections import defaultdict
 
-    from .agent import run_task
-    from .scoring import route_taken, score
+    from .agent import run_task, tool_spec
+    from .oracle import score_or_pending
+    from .scoring import outcome_of, route_taken
 
     if args.mode not in MODES_READY:
         print(f"mode {args.mode!r} lands later in phase 3. Ready: {sorted(MODES_READY)}")
@@ -166,6 +183,15 @@ def cmd_run(args: argparse.Namespace) -> int:
         tasks = [t for t in tasks if t["id"] in args.task]
     reps = args.reps or (1 if args.mode == "no_tools" else 3)
     tools, specs = {}, None  # no_tools
+    if args.mode in ("free", "anon"):
+        loaded, skipped = load_tools(cfg)
+        if skipped:  # free choice must offer the full tool set, or it isn't the experiment
+            print("[run] free choice needs every enabled tool:\n  " + "\n  ".join(skipped))
+            return 1
+        desc = cfg["tool_descriptions"]["neutral"] if args.mode == "free" else ANON_DESC
+        shown = (lambda n: n) if args.mode == "free" else ANON_NAMES.get
+        tools = {shown(t.name): t for t in loaded}
+        specs = [tool_spec(shown(t.name), desc[t.name], t.parameters) for t in loaded]
 
     quota = Quota(cfg, ROOT / cfg["quota"]["ledger"])
     plan: dict[str, float] = defaultdict(float)
@@ -176,45 +202,65 @@ def cmd_run(args: argparse.Namespace) -> int:
     try:
         run = RunDir.start(args.model, args.mode, resume=not args.new, tasks_path=Path(args.tasks),
                            extra={"model_id": cfg["models"][args.model]["id"], "reps": reps,
-                                  "n_tasks": len(tasks), "tools": sorted(tools)})
+                                  "n_tasks": len(tasks), "tools": sorted(tools),
+                                  **({"anon_names": ANON_NAMES, "anon_desc": ANON_DESC} if args.mode == "anon" else {})})
     except ResumeConflict as e:
         print(f"[run] {e}")
         return 1
-    # Records that died on an infrastructure error (no answer) are retried on resume.
-    done = {(r["task_id"], r["rep"]) for r in run.records("results")
+    # Records that died on an infrastructure error (no answer) are retried on resume;
+    # judge_pending records are re-judged without calling any tool.
+    done = {(r["task_id"], r["rep"]): r for r in latest_results(run)
             if not (r.get("error") and r.get("final_answer") is None)}
     try:
         for rep in range(reps):
             for t in tasks:
-                if (t["id"], rep) in done:
+                prev = done.get((t["id"], rep))
+                if prev:
+                    if prev["score"].get("method") == "judge_pending":
+                        sc = score_or_pending(t, prev["final_answer"], cfg, quota)
+                        if sc["method"] != "judge_pending":
+                            run.log("results", {**prev, "score": sc})
+                            print(f"{outcome_of(sc)} {t['id']} r{rep} [re-judged]")
                     continue
-                rec = run_task(t, args.model, cfg, quota, tools, specs)
-                sc = score(t, rec["final_answer"], cfg, quota)
+                rec = run_task(t, args.model, cfg, quota, tools, specs, raw_sink=raw_sink(run.path))
+                sc = score_or_pending(t, rec["final_answer"], cfg, quota)
                 row = {"task_id": t["id"], "question": t["question"], "category": t["category"], "rep": rep, "model": args.model,
                        "mode": args.mode, **rec, "score": sc, "route": route_taken(rec, t)}
                 run.log("results", row)
-                ans = (rec["final_answer"] or rec["error"] or "").replace("\n", " ")[:90]
-                print(f"{'PASS' if sc['correct'] else 'fail'} {t['id']} r{rep} [{sc['method']}] {ans}")
+                ans = (rec["final_answer"] or rec["error"] or "").replace("\n", " ")[:80]
+                picks = ",".join(TOOL_SHORT.get(c["tool"], c["tool"]) for c in rec["tool_calls"]) or "-"
+                print(f"{outcome_of(sc):<9} {t['id']} r{rep} [{picks}] {ans}", flush=True)
     except QuotaPaused as e:
         run.set_status("paused", reason=str(e))
         print(f"[quota] PAUSED: {e}\n[quota] rerun the same command to resume.")
         return EXIT_PAUSED
-    run.set_status("complete", list_usd=round(quota.session_list_usd, 6))
+    pending = [r for r in latest_results(run) if r["score"].get("method") == "judge_pending"]
+    if pending:
+        run.set_status("paused", reason=f"{len(pending)} judge verdicts pending (judge quota)")
+        print(f"[run] {len(pending)} judge verdicts pending; rerun the same command after the judge quota resets.")
+    else:
+        run.set_status("complete", list_usd=round(quota.session_list_usd, 6))
     _print_summary(latest_results(run))
     print(f"\n[quota] this session: list-price ${quota.session_list_usd:.4f}, actual $0\nlogs: {run.path}")
     return 0
 
 
+TOOL_SHORT = {"plain_fetch": "plain", "firecrawl_scrape": "fc", "tinyfish_fetch": "tff", "tinyfish_agent": "agent"}
+
+
 def _print_summary(rows: list[dict]) -> None:
-    from collections import defaultdict
-    by = defaultdict(lambda: [0, 0])
+    from collections import Counter, defaultdict
+
+    from .scoring import outcome_of
+    by: dict[str, Counter] = defaultdict(Counter)
     for r in rows:
-        by[r["category"]][0] += bool(r["score"]["correct"])
-        by[r["category"]][1] += 1
-    print("\ncategory      correct")
-    for c, (k, n) in by.items():
-        print(f"{c:<13} {k}/{n}")
-    print(f"{'total':<13} {sum(v[0] for v in by.values())}/{sum(v[1] for v in by.values())}")
+        by[r["category"]][outcome_of(r["score"], r.get("final_answer"))] += 1
+    print("\ncategory      correct  wrong  abstained  pending")
+    tot: Counter = Counter()
+    for c, k in by.items():
+        tot.update(k)
+        print(f"{c:<13} {k['correct']:>3}/{sum(k.values()):<4} {k['wrong']:>5} {k['abstained']:>10} {k['pending']:>8}")
+    print(f"{'total':<13} {tot['correct']:>3}/{sum(tot.values()):<4} {tot['wrong']:>5} {tot['abstained']:>10} {tot['pending']:>8}")
     empty = sum(not (r.get("final_answer") or "").strip() for r in rows)
     if empty:
         print(f"WARNING: {empty}/{len(rows)} empty final answers; check the raw logs before trusting these numbers.")
@@ -292,7 +338,35 @@ def cmd_oracle(args: argparse.Namespace) -> int:
     tools, skipped = load_tools(cfg, args.tool)
     for s in skipped:
         print(f"[skip] {s}")
-    return run_oracle(cfg, model, tasks, tools, tasks_path, resume=not args.new)
+    agent_ids: set[str] = set()
+    if args.agent_gaps:
+        from .oracle import agent_gap_ids, merged_for
+        agent_ids = set(agent_gap_ids(load_tasks(tasks_path), merged_for(load_tasks(tasks_path))))
+        tasks = [t for t in tasks if t["id"] in agent_ids]
+        tools = [t for t in tools if t.name == "tinyfish_agent"]
+        print(f"[oracle] agent gap tasks (no fetch tool can solve): {sorted(agent_ids) or 'none'}")
+    return run_oracle(cfg, model, tasks, tools, tasks_path, resume=not args.new, agent_ids=agent_ids)
+
+
+def cmd_report(args: argparse.Namespace) -> int:
+    from .report import build
+    out = build(load_tasks(Path(args.tasks)))
+    for label, kinds in out["picks"].items():
+        print(label, dict(kinds["all"]))
+    print("wrote charts/can_solve_by_category.png, charts/pick_vs_oracle_best.png")
+    return 0
+
+
+def cmd_free_summary(args: argparse.Namespace) -> int:
+    from .freechoice import summarize
+    run = Path(args.run) if args.run else max((ROOT / "runs").glob("*_free"), default=None)
+    if run is None:
+        print("no free-choice run found")
+        return 1
+    text = summarize(run, load_tasks(Path(args.tasks)))
+    (run / "summary.md").write_text(text + "\n", encoding="utf-8")
+    print(text)
+    return 0
 
 
 def cmd_oracle_table(args: argparse.Namespace) -> int:
@@ -388,11 +462,13 @@ def main(argv: list[str] | None = None) -> int:
     o.add_argument("--tasks", default=str(TASKS_DIR / "tasks.jsonl"))
     o.add_argument("--task", action="append", help="only this task id (repeatable)")
     o.add_argument("--new", action="store_true", help="start a fresh run instead of resuming")
+    o.add_argument("--agent-gaps", action="store_true",
+                   help="run only the TinyFish agent, on tasks outside its oracle categories that no fetch tool can solve")
     o.set_defaults(func=cmd_oracle)
     ot = sub.add_parser("oracle-table", help="print the merged oracle table (no API calls)")
     ot.add_argument("--tasks", default=str(TASKS_DIR / "tasks.jsonl"))
     ot.set_defaults(func=cmd_oracle_table)
-    r = sub.add_parser("run", help="agent run (modes: no_tools; free lands later in phase 3)")
+    r = sub.add_parser("run", help="agent run (modes: no_tools, free, anon)")
     r.add_argument("--model", required=True)
     r.add_argument("--mode", default="free")
     r.add_argument("--reps", type=int, help="repeats per task (default: 1 for no_tools, 3 otherwise)")
@@ -400,10 +476,16 @@ def main(argv: list[str] | None = None) -> int:
     r.add_argument("--task", action="append", help="only run this task id (repeatable)")
     r.add_argument("--new", action="store_true", help="start a fresh run instead of resuming")
     r.set_defaults(func=cmd_run)
-    sub.add_parser("memorized", help="flag tasks answered correctly in no_tools runs").set_defaults(func=cmd_memorized)
+    fs = sub.add_parser("free-summary", help="free-choice picks vs the oracle (no API calls)")
+    fs.add_argument("--run", help="run dir (default: latest *_free run)")
+    fs.add_argument("--tasks", default=str(TASKS_DIR / "tasks.jsonl"))
+    fs.set_defaults(func=cmd_free_summary)
+    sub.add_parser("memorized",help="flag tasks answered correctly in no_tools runs").set_defaults(func=cmd_memorized)
     sub.add_parser("ablate", help="ablation runs").set_defaults(func=_not_yet(4))
     sub.add_parser("label", help="hand-label outputs for judge validation").set_defaults(func=_not_yet(4))
-    sub.add_parser("report", help="build report.md and charts").set_defaults(func=_not_yet(5))
+    rp = sub.add_parser("report", help="build the README charts (no API calls)")
+    rp.add_argument("--tasks", default=str(TASKS_DIR / "tasks.jsonl"))
+    rp.set_defaults(func=cmd_report)
 
     args = p.parse_args(argv)
     return args.func(args)

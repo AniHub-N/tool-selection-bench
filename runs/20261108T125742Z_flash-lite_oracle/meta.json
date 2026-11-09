@@ -18,6 +18,30 @@
       "ended_at": "2026-11-08T14:13:54.022007+00:00",
       "ended_status": "paused",
       "reason": "3 judge verdicts pending (judge quota)"
+    },
+    {
+      "started_at": "2026-11-08T17:24:54.400934+00:00",
+      "commit": "822cc83936431bde8dd1a8bd3f35ae7c3667ad4f",
+      "dirty": true,
+      "ended_at": "2026-11-08T17:26:38.998648+00:00",
+      "ended_status": "paused",
+      "reason": "4 judge verdicts pending (judge quota)"
+    },
+    {
+      "started_at": "2026-11-09T08:05:57.889480+00:00",
+      "commit": "822cc83936431bde8dd1a8bd3f35ae7c3667ad4f",
+      "dirty": true,
+      "ended_at": "2026-11-09T08:24:27.643781+00:00",
+      "ended_status": "paused",
+      "reason": "3 judge verdicts pending (judge quota)"
+    },
+    {
+      "started_at": "2026-11-09T08:24:56.861122+00:00",
+      "commit": "822cc83936431bde8dd1a8bd3f35ae7c3667ad4f",
+      "dirty": true,
+      "ended_at": "2026-11-09T08:29:21.850820+00:00",
+      "ended_status": "paused",
+      "reason": "3 judge verdicts pending (judge quota)"
     }
   ],
   "model_id": "gemini/gemini-3.5-flash-lite",

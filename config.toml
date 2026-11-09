@@ -74,8 +74,8 @@ stop_frac = 0.9             # pause at 90% of RPD, leaving headroom
 
 [quota.gemini.flash-lite]
 rpm = 15
-rpd = 1000
-stop_frac = 0.9
+rpd = 500                   # OBSERVED: server 429 "exceeded your current quota" at ~498 requests on 2026-11-08 PT (placeholder was 1000)
+stop_frac = 0.95
 
 [quota.firecrawl_scrape]
 rpm = 10                   # free plan: 10 scrapes/min, 2 concurrent (we run serially)

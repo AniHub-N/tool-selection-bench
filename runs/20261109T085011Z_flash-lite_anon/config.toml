@@ -1,0 +1,106 @@
+# tool-selection-bench config. Every run copies this file into its run directory.
+# Budget is $0: free tiers only. Spend is tracked as free-quota units, and every
+# call also records what it WOULD cost at list price (for the cost charts).
+
+seed = 1234
+
+[tools]
+enabled = ["plain_fetch", "firecrawl_scrape", "tinyfish_fetch", "tinyfish_agent"]
+pdf_max_pages = 10          # same page cap for every tool that parses PDFs (fairness + credits)
+
+[tools.plain_fetch]
+timeout_s = 30
+list_usd_per_call = 0.0
+
+[tools.firecrawl_scrape]
+timeout_ms = 60000
+list_usd_per_credit = 0.005 # $5 per 1,000 credits (Hobby top-up rate)
+
+[tools.tinyfish_fetch]
+per_url_timeout_ms = 60000
+list_usd_per_url = 0.0      # Fetch is free; no list price published
+
+[tools.tinyfish_agent]
+browser_profile = "lite"
+max_steps = 5
+max_duration_seconds = 120
+usd_per_step = 0.016        # TinyFish pricing page; the live wallet rate overrides this at preflight
+oracle_categories = ["interactive"]   # oracle sweep runs the agent on these categories only
+
+[agent]
+max_tool_calls = 3
+temperature = 0.0
+max_content_chars = 50000   # tool output truncated to this before going to the LLM (PDF table answers sit at 20-31k)
+system_prompt = "Answer the question using the tools available."
+# no_tools mode only: with the prompt above and zero tools, Gemini returns empty output (see NOTES.md).
+system_prompt_no_tools = "Answer the question."
+
+# Tool descriptions shown to the model. "neutral" = factual capabilities only, similar length,
+# no adjectives. Used by the oracle sweep and plain free choice; the ablation adds a "salesy" set.
+# Facts: plain fetch has no JS (smoke: 60 chars on quotes/js); Firecrawl and TinyFish Fetch
+# returned the JS-rendered quotes; Firecrawl parses PDFs via its pdf parser.
+[tool_descriptions.neutral]
+plain_fetch = "Fetch a URL with a plain HTTP GET and return the main text as Markdown. Does not run JavaScript. PDFs are converted to text."
+firecrawl_scrape = "Fetch a URL with Firecrawl and return the page as Markdown. Runs JavaScript before extracting. PDFs are converted to text."
+tinyfish_fetch = "Fetch a URL with TinyFish Fetch and return the page as Markdown. Runs JavaScript before extracting."
+tinyfish_agent = "Give a browser agent a start URL and a goal in plain language. It can click, scroll, paginate and fill forms (up to 5 steps), then returns what it found."
+
+# Short name -> LiteLLM model id + list prices (USD per 1M tokens, Standard tier,
+# from ai.google.dev pricing, checked 2026-11-08). Both are on the free tier.
+[models.flash]
+id = "gemini/gemini-3.8-flash"
+usd_per_mtok_in = 0.75      # rises to 1.50 on 2027-01-01
+usd_per_mtok_out = 3.75     # rises to 7.50 on 2027-01-01
+
+[models.flash-lite]
+id = "gemini/gemini-3.5-flash-lite"
+usd_per_mtok_in = 0.30
+usd_per_mtok_out = 2.50
+
+
+# ---------------------------------------------------------------------------
+# Free-quota limits. Excluded from the run's config hash, so editing these
+# does not block resuming a run.
+[quota]
+ledger = "runs/quota.json"
+
+# Gemini free-tier limits are per Google Cloud project and only shown in AI Studio
+# (https://aistudio.google.com/rate-limit). These are CONSERVATIVE PLACEHOLDERS:
+# replace with the numbers on your dashboard. RPD resets at midnight Pacific.
+[quota.gemini.flash]
+rpm = 10
+rpd = 20                    # OBSERVED: server 429 "exceeded your current quota" after 21 requests on 2026-11-07 PT
+stop_frac = 0.9             # pause at 90% of RPD, leaving headroom
+
+[quota.gemini.flash-lite]
+rpm = 15
+rpd = 500                   # OBSERVED: server 429 "exceeded your current quota" at ~498 requests on 2026-11-08 PT (placeholder was 1000)
+stop_frac = 0.95
+
+[quota.firecrawl_scrape]
+rpm = 10                   # free plan: 10 scrapes/min, 2 concurrent (we run serially)
+free_credits = 1000         # per billing month
+stop_at = 800               # pause once 800 credits are used this month
+
+[quota.tinyfish_fetch]
+rpm = 25                    # free-trial figure; personal accounts get more
+free_per_day = 1000         # free allowance, resets 00:00 UTC
+stop_at = 900               # past the allowance, fetch bills the wallet; don't let it
+
+[quota.tinyfish_agent]
+rpm = 6
+cap_usd = 6.0               # hard global cap on agent spend (of the $8 signup credit)
+min_wallet_usd = 0.5        # also pause if the live wallet would drop below this
+
+[quota.plain_fetch]
+rpm = 60
+
+[judge]
+# Fixed judge model + rubric (scoring.JUDGE_PROMPT). Validated against hand labels in Phase 4.
+model = "flash"
+
+[experiment]
+# Decision 2026-11-08: Scout (Groq) is shut down, Mistral's free plan is gone, and NVIDIA was
+# unusable and then dropped (see NOTES.md), so Flash-Lite is the ONLY main model. Flash is a side
+# run (1 rep free choice, no ablations). The README must state "Gemini family only".
+main_models = ["flash-lite"]

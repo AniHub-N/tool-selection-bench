@@ -162,3 +162,24 @@ def test_datatables_record_spans_lines_but_not_rows():
     assert evidence_present(j06, "| Airi Satou | Accountant | Tokyo | 28th Nov 08 |") is True
     other = '[\n "Airi Satou",\n "Accountant",\n "2009-01-01"\n],\n[\n "X",\n "2008-11-28"\n]'
     assert evidence_present(j06, other) is False   # the date belongs to the next record
+
+
+def test_agent_gap_tasks_get_agent_cells(tmp_path):
+    from bench.oracle import agent_gap_ids
+    cfg = load_config()
+    J = {"id": "j1", "category": "js_heavy", "check_type": "contains", "expected_answer": "zebra"}
+    rows = [make_row(tmp_path, J, tl, ["no answer here"], False)
+            for tl in ("plain_fetch", "firecrawl_scrape", "tinyfish_fetch")]
+    rows += [make_row(tmp_path, S1, tl, ["a897fe39"], True) for tl in ("plain_fetch", "firecrawl_scrape")]
+    # S1 lacks a tinyfish_fetch cell, and one tool can solve it anyway: not a gap
+    assert agent_gap_ids([J, S1], rows) == ["j1"]
+    tools = [SimpleNamespace(name="tinyfish_agent")]
+    assert [t["id"] for t, _ in cells_for([J, S1], tools, cfg, {"j1"})] == ["j1"]
+    assert cells_for([J, S1], tools, cfg) == []
+
+
+def test_abstained_cell(tmp_path):
+    r = make_row(tmp_path, S1, "plain_fetch", ["nothing"], False)
+    r["final_answer"] = ""
+    assert cell(r, S1) == "n abst"
+    assert "s1/plain" in oracle_table([r], [S1]).split("**Abstained**")[1].splitlines()[0]

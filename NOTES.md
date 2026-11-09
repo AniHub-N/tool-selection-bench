@@ -425,3 +425,55 @@ check and writes `tasks/plain_visibility.json`.
   1,000/day); TinyFish agent 12 calls, 53 steps, $0.848 (ledger total $0.896 of the $6 cap; wallet
   $10.95 -> $10.10); Flash-Lite 376 requests today (stop at 900); Flash 18/18 (judge). Actual
   spend $0; list price ~$1.61.
+
+## 2026-11-08: agent gap cells, abstentions, tool-settings audit
+
+- **Agent oracle on gap tasks.** `oracle --agent-gaps` runs the TinyFish agent (same 5-step cap)
+  on tasks outside its oracle categories where no fetch tool has can=Y: j02, j03, j07. All three
+  can=Y (j02 André Gide from /js-delayed/, j03 "life, navigation" from /scroll, j07 2011-12-12).
+  j03's extraction verdict is judge-pending. 3 calls, 15 steps, ~$0.24 list. The config hash
+  is unchanged (the gap set is a CLI selection, not config), so the cells merge into the same
+  oracle table. Agent can-solve is now 12/13 (9/10 interactive + 3/3 gaps).
+- **`abstained` outcome.** score() now returns `outcome`: correct | wrong | abstained | pending.
+  Abstained = None or empty final text. `correct` stays False for it, so accuracy numbers don't
+  move; abstentions are just reported apart from wrong answers. An explicit "I couldn't find it"
+  is a non-empty answer and grades as wrong (deliberately narrow, no phrase matching). Old oracle
+  rows get the outcome recomputed from their stored answer. In the oracle: 14 abstained cells
+  (9 of them tinyfish_fetch), all with can=n. System prompt unchanged; oracle and free choice
+  share it.
+- **Tool-settings audit (docs read 2026-11-08). Neither tool ran on pure defaults.**
+  - Firecrawl (docs.firecrawl.dev scrape): formats=[markdown], onlyMainContent=true, and
+    timeout=60000 are all the defaults. **Non-default:** `parsers`. We send
+    `[{type: pdf, maxPages: 10}]`, while the default is `[pdf, image]` with no page cap. Two effects: PDFs are
+    capped at 10 pages (the same cap as plain fetch, chosen for credits), and the image parser is
+    off. Measured impact on the oracle is none: every PDF task is can=Y on Firecrawl (the
+    answers sit inside the first 10 pages, and six PDFs had more), and no task URL is an image. maxAge,
+    proxy, waitFor, blockAds and the other options were left at their defaults.
+  - TinyFish Fetch (docs.tinyfish.ai/fetch-api/reference): format=markdown is the default.
+    **Non-default:** `per_url_timeout_ms=60000`; the default leaves it unset, which allows up to
+    110 s. Impact is none: no Fetch call timed out, and every call took under 30 s.
+    Fetch has no PDF page cap, so it read the full PDFs, while plain fetch and Firecrawl were
+    capped at 10 pages.
+    **Documented options we did not use:** `include_selectors`/`exclude_selectors` (CSS scoping;
+    include bypasses automatic boilerplate removal, the only documented lever that might
+    recover the collapsed or partial content, but it needs per-site selectors, so it is tuning,
+    not a default); `ttl` (left unset, which accepts any cached copy, as Firecrawl's maxAge does;
+    `ttl: 0` forces a live fetch, and a cached partial render can't be ruled out); format
+    `html`/`json`; `links`/`image_links`/`iframe_links`; `purpose`; `highlights` (beta).
+    The docs list no render, wait, scroll or max-length option.
+  - The settings were NOT changed (reported for a decision). Free choice runs on the same settings
+    as the oracle, so the two stay comparable. The "tools ran on documented defaults" line was
+    not added, because it isn't true.
+
+## 2026-11-08/09: free choice (Flash-Lite x3) run log
+
+- Setup: all four tools offered in config order (plain, firecrawl, tf_fetch, tf_agent), neutral
+  descriptions, the oracle's system prompt, max 3 tool calls. The judge is stored as pending when
+  its quota is out, and re-judged on resume without calling any tool.
+- First session died silently after 39 rows (17:41 UTC; exit 4, no traceback, the wrapping shell
+  was killed too, so most likely the host session, not the bench). Resumed cleanly.
+- **Flash-Lite's real free RPD is ~500, not 1,000.** Google returned a server-side 429 "exceeded your
+  current quota" at ~498 requests on 2026-11-08 PT. config: rpd 500, stop at 95%. The run paused
+  at 45/120 rows and resumes after the 08:00 UTC reset.
+- Judge budget: 15 free-choice judge calls (5 judge tasks x 3) + 4 pending oracle cells = 19
+  against the Flash stop at 18, so one verdict may roll to the following day.

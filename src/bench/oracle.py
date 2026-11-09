@@ -23,6 +23,7 @@ from typing import Any
 from .config import ROOT, RUNS_DIR
 from .quota import Quota, QuotaPaused, llm_resource
 from .runlog import ResumeConflict, RunDir, experiment_hash
+from .scoring import outcome_of
 
 TOOL_ORDER = ["plain_fetch", "firecrawl_scrape", "tinyfish_fetch", "tinyfish_agent"]
 TOOL_ABBR = {"plain_fetch": "plain", "firecrawl_scrape": "firecrawl", "tinyfish_fetch": "tf_fetch",
@@ -40,11 +41,12 @@ def score_or_pending(task: dict, answer: str | None, cfg: dict, quota: Quota) ->
     except QuotaPaused as e:
         if task["check_type"] != "judge":
             raise
-        return {"correct": None, "method": "judge_pending", "reason": str(e)[:200]}
+        return {"correct": None, "outcome": "pending", "method": "judge_pending", "reason": str(e)[:200]}
     except Exception as e:  # judge timed out / errored after retries: re-judge on the next run
         if task["check_type"] != "judge":
             raise
-        return {"correct": None, "method": "judge_pending", "reason": f"{type(e).__name__}: {str(e)[:180]}"}
+        return {"correct": None, "outcome": "pending", "method": "judge_pending",
+                "reason": f"{type(e).__name__}: {str(e)[:180]}"}
 
 
 def merged_for(tasks: list[dict], runs_dir: Path = RUNS_DIR) -> list[dict]:
@@ -86,10 +88,27 @@ def infra_failed(row: dict) -> bool:
     return bool(row.get("error")) and row.get("final_answer") is None
 
 
-def cells_for(tasks: list[dict], tools: list, cfg: dict) -> list[tuple[dict, Any]]:
+FETCH_TOOLS = ["plain_fetch", "firecrawl_scrape", "tinyfish_fetch"]
+
+
+def cells_for(tasks: list[dict], tools: list, cfg: dict, agent_ids=frozenset()) -> list[tuple[dict, Any]]:
+    """The agent runs on `oracle_categories` plus `agent_ids` (gap tasks, see agent_gap_ids)."""
     agent_cats = cfg["tools"]["tinyfish_agent"].get("oracle_categories", [])
     return [(t, tool) for t in tasks for tool in tools
-            if tool.name != "tinyfish_agent" or t["category"] in agent_cats]
+            if tool.name != "tinyfish_agent" or t["category"] in agent_cats or t["id"] in agent_ids]
+
+
+def agent_gap_ids(tasks: list[dict], rows: list[dict]) -> list[str]:
+    """Tasks outside the agent's oracle categories where every fetch tool has an oracle cell and
+    none can solve it (can != Y). The agent oracle is extended to these, so a later agent pick
+    there has a verdict to be scored against."""
+    by = {(r["task_id"], r["tool"]): r for r in rows}
+    out = []
+    for t in tasks:
+        cells = [by.get((t["id"], tl)) for tl in FETCH_TOOLS]
+        if all(cells) and not any(can_solve(c, t) is True for c in cells):
+            out.append(t["id"])
+    return out
 
 
 HAND_LABELS = ROOT / "tasks" / "oracle_hand_labels.json"
@@ -129,11 +148,11 @@ def can_solve(row: dict, task: dict, labels: dict | None = None) -> bool | None:
 
 
 def run_oracle(cfg: dict, model: str, tasks: list[dict], tools: list, tasks_path: Path,
-               resume: bool = True) -> int:
+               resume: bool = True, agent_ids=frozenset()) -> int:
     from .agent import run_task, tool_spec
     from .scoring import route_taken
 
-    cells = cells_for(tasks, tools, cfg)
+    cells = cells_for(tasks, tools, cfg, agent_ids)
     desc = cfg["tool_descriptions"]["neutral"]
     max_calls = cfg["agent"]["max_tool_calls"]
     quota = Quota(cfg, ROOT / cfg["quota"]["ledger"])
@@ -171,7 +190,7 @@ def run_oracle(cfg: dict, model: str, tasks: list[dict], tools: list, tasks_path
                    "rep": 0, "model": model, "mode": "oracle", **rec, "score": sc, "route": route_taken(rec, t)}
             run.log("results", row)
             can = can_solve({**row, "_run_path": str(run.path)}, t)
-            ext = {True: "PASS", False: "fail", None: "pend"}[sc["correct"]]
+            ext = EXT[outcome_of(sc, rec["final_answer"])]
             flags = [f"blocked:{c['blocked']}" for c in rec["tool_calls"] if c.get("blocked")]
             flags += [f"err:{(c['error'] or '')[:40]}" for c in rec["tool_calls"] if c.get("error")]
             ans = (rec["final_answer"] or rec["error"] or "").replace("\n", " ")[:60]
@@ -197,6 +216,9 @@ def run_oracle(cfg: dict, model: str, tasks: list[dict], tools: list, tasks_path
     return EXIT_PAUSED if pending else 0
 
 
+EXT = {"correct": "PASS", "wrong": "fail", "abstained": "abst", "pending": "pend"}
+
+
 def _yn(v: bool | None) -> str:
     return {True: "Y", False: "n", None: "?"}[v]
 
@@ -208,8 +230,7 @@ def cell(row: dict | None, task: dict) -> str:
         return "-"
     if infra_failed(row):
         return "ERR"
-    ext = {True: "PASS", False: "fail", None: "pend"}[row["score"]["correct"]]
-    s = f"{_yn(can_solve(row, task))} {ext}"
+    s = f"{_yn(can_solve(row, task))} {EXT[outcome_of(row['score'], row.get('final_answer'))]}"
     if hand_label(row):
         s += " H"
     calls = row.get("tool_calls") or []
@@ -230,7 +251,8 @@ def oracle_table(rows: list[dict], tasks: list[dict]) -> str:
     tid = {t["id"]: t for t in tasks}
     tools = [t for t in TOOL_ORDER if any(k[1] == t for k in by)]
     out = ["Each cell: **can** (oracle: answer present in the raw tool output; Y / n / ? = presence "
-           "can't decide) then **ext** (Flash-Lite's final answer PASS / fail).\n",
+           "can't decide) then **ext** (Flash-Lite's final answer: PASS / fail = wrong answer / "
+           "abst = abstained, no answer at all / pend = judge pending).\n",
            "| task | cat | " + " | ".join(TOOL_ABBR[t] for t in tools) + " | flags |",
            "|---|---|" + "---|" * len(tools) + "---|"]
     for t in tasks:
@@ -266,6 +288,9 @@ def oracle_table(rows: list[dict], tasks: list[dict]) -> str:
     out.append("**Extraction misses** (tool delivered the answer, Flash-Lite still failed): "
                + (", ".join(f"{r['task_id']}/{TOOL_ABBR[r['tool']]}" for r in rows
                             if can_f(r) is True and r["score"]["correct"] is False) or "none"))
+    abst = [r for r in rows if outcome_of(r["score"], r.get("final_answer")) == "abstained"]
+    out.append("**Abstained** (empty final answer; not correct, reported apart from wrong): "
+               + (", ".join(f"{r['task_id']}/{TOOL_ABBR[r['tool']]}" for r in abst) or "none"))
     out.append("**Answered without evidence** (can=n but ext=PASS: memory or guess): "
                + (", ".join(f"{r['task_id']}/{TOOL_ABBR[r['tool']]}" for r in rows
                             if can_f(r) is False and r["score"]["correct"] is True) or "none") + "\n")

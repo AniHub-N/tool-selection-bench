@@ -1,0 +1,170 @@
+[quota] preflight for flash-lite free x3
+[quota]   firecrawl live: 1258 credits remaining (plan 1000, period ends 2026-11-29T13:41:58.019Z)
+[quota]   tinyfish live: wallet $9.86
+[quota]   resource                estimate      used   stop at
+[quota]   gemini:flash-lite            480       382       900
+[quota]   gemini:flash                  15        18        18  <- will pause partway; rerun the same command to resume
+[quota]   list-price total so far: $2.1932 (actual spend: $0)
+[run] new run 20261108T172740Z_flash-lite_free
+correct   s01 r0 [plain] The UPC of this book is **a897fe39b1053632**.
+correct   s02 r0 [plain] There are **20** copies of this book listed as available.
+correct   s03 r0 [plain] The page lists the population for Anguilla as **13,254**.
+correct   s04 r0 [plain] For SQLite versions after 3.32.0, the default value of `SQLITE_MAX_VARIABLE_NUMB
+pending   s05 r0 [plain] In the SQLite database file header, the 2-byte field at offset 16 stores **the d
+correct   s06 r0 [plain] In PostgreSQL 16, the permitted range for the scale in a `numeric` type declarat
+correct   s07 r0 [plain] According to PostgreSQL 16 documentation (Table 8.9: Date/Time Types), the high 
+correct   s08 r0 [plain] According to the table, the Boston Bruins had **44** wins in 1990.
+correct   s09 r0 [plain] The name of the blacksmith in the passage is **Perth**.
+correct   s10 r0 [plain] HTCPCP/1.0 defines the **`Accept-Additions`** request header field for specifyin
+pending   j01 r0 [plain,fc] The tags attached to the Jane Austen quote ("The person, be it gentleman or lady
+abstained j02 r0 [tff,agent,plain] 
+pending   j03 r0 [plain,fc,agent] The tags attached to the Douglas Adams quote on the page are:  * **life** * **na
+correct   j04 r0 [fc] The price of the Grayson Crewneck Sweatshirt on this page is **$64**.
+abstained j05 r0 [plain,agent,tff] 
+correct   j06 r0 [plain,plain] Based on the data source table for Airi Satou (`['Airi Satou', 'Accountant', 'To
+correct   j07 r0 [plain,fc] Caesar Vance's start date in the table is **12th Dec 11**.
+correct   j08 r0 [plain,fc] According to the API description on the page, you can use the API key `special-k
+pending   j09 r0 [plain] There are **3** paths (comprising **4** operations in total) listed under the `s
+correct   j10 r0 [plain,fc] The author of the last quote on that page is **Allen Saunders**.
+correct   p01 r0 [plain] In the Bitcoin whitepaper (Section 11, Calculations), the table of attacker succ
+wrong     p02 r0 [plain] According to **Table 2** in the paper *Attention Is All You Need* (Vaswani et al
+correct   p03 r0 [plain,plain] In Table 1 of the paper, **BERT-LARGE** achieved a score of **60.5** on CoLA (Co
+correct   p04 r0 [plain] Based on **Table 2** ("Top-1 error (%, 10-crop testing) on ImageNet validation")
+correct   p05 r0 [plain] On the **PhC-U373** dataset, the U-Net achieved an average Intersection over Uni
+correct   p06 r0 [plain] According to Table 1 in the paper, adversarial nets got a Parzen window-based lo
+correct   p07 r0 [plain,fc] According to the manuscript, the pre-ALGOL meeting took place in **Copenhagen**.
+correct   p08 r0 [plain] According to the Consumer Price Index report for December 2023 (U.S. Bureau of L
+correct   p09 r0 [plain] Per the table in **Figure 3** (found on Page 7 of the paper), **BN-x5** needed *
+pending   p10 r0 [plain] Based on **Table 3** in the paper (found on Page 7), the architecture with the h
+correct   i01 r0 [plain,agent] The price of the **Lando Gym Jacket** on this page is **$99**.
+correct   i02 r0 [plain,fc,agent] Based on the 2010 film data on that page, the film with 3 nominations and 2 awar
+correct   i03 r0 [tff,agent] Based on the team search for the Toronto Maple Leafs in 1995, they had **247** g
+correct   i04 r0 [plain] The author of the first quote on page 4 of quotes.toscrape.com is **Dr. Seuss**.
+correct   i05 r0 [plain,plain] There are **110** books in the Nonfiction category on Books to Toscrape.
+correct   i06 r0 [agent] The UPC of the book 'Sharp Objects' on Books to Scrape is **e00eb4fd7b871a48**.
+correct   i07 r0 [fc] Zenaida Frank's extension number is **7439**.
+correct   i08 r0 [plain,plain] Zorita Serrano's start date in the table is **2012-06-01**.
+wrong     i09 r0 [plain,plain,plain] There are **8** quotes on the site tagged with 'humor' in total (7 on the first 
+[quota] preflight for flash-lite free x3
+[quota]   firecrawl live: 1245 credits remaining (plan 1000, period ends 2026-11-29T13:41:58.019Z)
+[quota]   tinyfish live: wallet $9.21
+[quota]   resource                estimate      used   stop at
+[quota]   gemini:flash-lite            480       484       900  <- will pause partway; rerun the same command to resume
+[quota]   gemini:flash                  15        18        18  <- will pause partway; rerun the same command to resume
+[quota]   list-price total so far: $2.9120 (actual spend: $0)
+[run] resuming 20261108T172740Z_flash-lite_free (39 records so far)
+correct   i10 r0 [plain,plain,agent] The price of the Geo Insulated Jogging Pant on this site is **$51**.
+correct   s01 r1 [plain] The UPC of this book is **a897fe39b1053632**.
+correct   s02 r1 [plain] There are **20** copies of this book listed as available.
+correct   s03 r1 [plain] The page lists the population for Anguilla as **13,254**.
+correct   s04 r1 [plain] For SQLite versions after 3.32.0, the default value of `SQLITE_MAX_VARIABLE_NUMB
+pending   s05 r1 [plain] In the SQLite database file header, the 2-byte field at offset 16 stores **the d
+[quota] PAUSED: Gemini daily quota exhausted (server-side): litellm.RateLimitError: litellm.RateLimitError: geminiException - {
+  "error": {
+    "code": 429,
+    "message": "You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://aistudio.google.com/docs/rate-limits. To monitor your cu
+[quota] rerun the same command to resume.
+exit 3
+=== Mon Nov  9 08:05:29 UTC 2026 re-judge oracle ===
+PASS p10 tinyfish_fetch [re-judged]
+[oracle] 3 judge verdicts pending; rerun after the judge quota resets.
+Each cell: **can** (oracle: answer present in the raw tool output; Y / n / ? = presence can't decide) then **ext** (Flash-Lite's final answer: PASS / fail = wrong answer / abst = abstained, no answer at all / pend = judge pending).
+[oracle] 3 judge verdicts pending; rerun after the judge quota resets.
+Each cell: **can** (oracle: answer present in the raw tool output; Y / n / ? = presence can't decide) then **ext** (Flash-Lite's final answer: PASS / fail = wrong answer / abst = abstained, no answer at all / pend = judge pending).
+=== Mon Nov  9 08:29:32 UTC 2026 resume free choice ===
+[quota] preflight for flash-lite free x3
+[quota]   firecrawl live: 1245 credits remaining (plan 1000, period ends 2026-11-29T13:41:58.019Z)
+[quota]   tinyfish live: wallet $9.13
+[quota]   resource                estimate      used   stop at
+[quota]   gemini:flash-lite            480         0       475  <- will pause partway; rerun the same command to resume
+[quota]   gemini:flash                  15        18        18  <- will pause partway; rerun the same command to resume
+[quota]   list-price total so far: $3.0058 (actual spend: $0)
+[run] resuming 20261108T172740Z_flash-lite_free (45 records so far)
+correct   s06 r1 [plain] In PostgreSQL 16, the permitted range for the scale in a `numeric` type declarat
+correct   s07 r1 [plain] According to PostgreSQL 16 documentation (Table 8.9: Date/Time Types), the high 
+correct   s08 r1 [plain] According to the table, the Boston Bruins had **44** wins in 1990.
+correct   s09 r1 [plain] The name of the blacksmith in the passage is **Perth**.
+correct   s10 r1 [plain] HTCPCP/1.0 defines the **`Accept-Additions`** request header field for specifyin
+pending   j01 r1 [plain,fc] The tags attached to the Jane Austen quote ("The person, be it gentleman or lady
+abstained j02 r1 [tff,agent,plain] 
+pending   j03 r1 [plain,fc,agent] The tags attached to the Douglas Adams quote ("I may not have gone where I inten
+correct   j04 r1 [fc] The price of the Grayson Crewneck Sweatshirt on this page is **$64**.
+correct   j05 r1 [plain,agent,agent] The price of the Kenobi Trail Jacket is **$47**.
+correct   j06 r1 [plain,plain] Based on the data source table for Airi Satou (`['Airi Satou', 'Accountant', 'To
+correct   j07 r1 [plain,fc] Caesar Vance's start date in the table is **12th Dec 11**.
+correct   j08 r1 [plain,fc] According to the API description on the page, you can use the API key `special-k
+pending   j09 r1 [plain] There are **3** paths (comprising **4** operations in total) listed under the `s
+correct   j10 r1 [plain,fc] The author of the last quote on that page is **Allen Saunders**.
+correct   p01 r1 [plain] In the Bitcoin whitepaper (Section 11, Calculations), the table of attacker succ
+wrong     p02 r1 [plain] According to **Table 2** in the paper *Attention Is All You Need* (Vaswani et al
+correct   p03 r1 [plain,plain] In Table 1 of the paper, **BERT-LARGE** achieved a score of **60.5** on CoLA (Co
+correct   p04 r1 [plain] Based on **Table 2** ("Top-1 error (%, 10-crop testing) on ImageNet validation")
+correct   p05 r1 [plain] On the **PhC-U373** dataset, the U-Net achieved an average Intersection over Uni
+correct   p06 r1 [plain] According to Table 1 in the paper, adversarial nets got a Parzen window-based lo
+correct   p07 r1 [plain,fc] According to the manuscript, the pre-ALGOL meeting took place in **Copenhagen**.
+correct   p08 r1 [plain] According to the Consumer Price Index report for December 2023 (U.S. Bureau of L
+correct   p09 r1 [plain] Per the table in **Figure 3** (found on Page 7 of the paper), **BN-x5** needed *
+pending   p10 r1 [plain] Based on **Table 3** in the paper (found on Page 7), the architecture with the h
+correct   i01 r1 [plain,agent] The price of the Lando Gym Jacket on this page is **$99**.
+correct   i02 r1 [plain,fc,agent] Based on the data for the year 2010 on that page, the film with 3 nominations an
+correct   i03 r1 [tff,agent] Based on the team search for the Toronto Maple Leafs in 1995, they had **247** g
+correct   i04 r1 [plain] The author of the first quote on page 4 of quotes.toscrape.com is **Dr. Seuss**.
+correct   i05 r1 [plain,plain] There are **110** books in the Nonfiction category on Books to Toscrape.
+correct   i06 r1 [agent,plain] The UPC of the book 'Sharp Objects' on Books to Scrape is **e00eb4fd7b871a48**.
+correct   i07 r1 [fc] Zenaida Frank's extension number is **7439**.
+correct   i08 r1 [plain,plain] Zorita Serrano's start date in the table is **2012-06-01**.
+wrong     i09 r1 [plain,plain,plain] There are **8** quotes on the site tagged with 'humor' in total (7 on the first 
+correct   i10 r1 [plain,plain,agent] The price of the **Geo Insulated Jogging Pant** on this site is **$51**.
+correct   s01 r2 [plain] The UPC of this book is **a897fe39b1053632**.
+correct   s02 r2 [plain] There are **20** copies of this book listed as available.
+correct   s03 r2 [plain] The page lists the population for Anguilla as **13,254**.
+correct   s04 r2 [plain] For SQLite versions after 3.32.0, the default value of `SQLITE_MAX_VARIABLE_NUMB
+pending   s05 r2 [plain] In the SQLite database file header, the 2-byte field at offset 16 stores **the d
+correct   s06 r2 [plain] In PostgreSQL 16, the permitted range for the scale in a `numeric` type declarat
+correct   s07 r2 [plain] According to PostgreSQL 16 documentation (Table 8.9: Date/Time Types), the high 
+correct   s08 r2 [plain] According to the table, the Boston Bruins had **44** wins in 1990.
+correct   s09 r2 [plain] The name of the blacksmith in the passage is **Perth**.
+correct   s10 r2 [plain] HTCPCP/1.0 defines the **`Accept-Additions`** request header field for specifyin
+pending   j01 r2 [plain,fc] The tags attached to the Jane Austen quote ("The person, be it gentleman or lady
+abstained j02 r2 [tff,agent,plain] 
+abstained j03 r2 [plain,fc,agent] 
+correct   j04 r2 [fc] The price of the Grayson Crewneck Sweatshirt on this page is **$64**.
+correct   j05 r2 [plain,agent] The price of the Kenobi Trail Jacket on the page is **$47**.
+correct   j06 r2 [plain,plain] Based on the data source table for Airi Satou (`['Airi Satou', 'Accountant', 'To
+correct   j07 r2 [plain,fc] Caesar Vance's start date in the table is **12th Dec 11**.
+correct   j08 r2 [plain,fc] According to the API description on the page, you can use the API key `special-k
+pending   j09 r2 [plain] There are **3** paths (comprising **4** operations in total) listed under the `s
+correct   j10 r2 [plain,fc] The author of the last quote on that page is **Allen Saunders**.
+correct   p01 r2 [plain] In the Bitcoin whitepaper (Section 11, Calculations), the table of attacker succ
+wrong     p02 r2 [plain] According to **Table 2** in the paper *Attention Is All You Need* (Vaswani et al
+correct   p03 r2 [plain,plain] In Table 1 of the paper, **BERT-LARGE** achieved a score of **60.5** on CoLA (Co
+correct   p04 r2 [plain] Based on **Table 2** ("Top-1 error (%, 10-crop testing) on ImageNet validation")
+correct   p05 r2 [plain] On the **PhC-U373** dataset, the U-Net achieved an average Intersection over Uni
+correct   p06 r2 [plain] According to Table 1 in the paper, adversarial nets got a Parzen window-based lo
+correct   p07 r2 [plain,fc] According to the manuscript, the pre-ALGOL meeting took place in **Copenhagen**.
+correct   p08 r2 [plain] According to the Consumer Price Index report for December 2023 (U.S. Bureau of L
+correct   p09 r2 [plain] Per the table in **Figure 3** (found on Page 7 of the paper), **BN-x5** needed *
+pending   p10 r2 [plain] Based on **Table 3** in the paper (found on Page 7), the architecture with the h
+correct   i01 r2 [plain,agent] The price of the **Lando Gym Jacket** on this page is **$99**.
+correct   i02 r2 [plain,fc,agent] Based on the data for the year 2010 on that page, the film with 3 nominations an
+correct   i03 r2 [tff,agent] Based on the team search for the Toronto Maple Leafs in 1995, the number of goal
+correct   i04 r2 [plain] The author of the first quote on page 4 of quotes.toscrape.com is **Dr. Seuss**.
+correct   i05 r2 [plain,plain] There are **110** books in the Nonfiction category on Books to Toscrape.
+correct   i06 r2 [agent] The UPC of the book 'Sharp Objects' on Books to Scrape is **e00eb4fd7b871a48**.
+correct   i07 r2 [fc] Zenaida Frank's extension number is **7439**.
+correct   i08 r2 [plain,plain] Zorita Serrano's start date in the table is **2012-06-01**.
+wrong     i09 r2 [plain,plain,plain] There are **8** quotes on the site tagged with 'humor' in total (7 on the first 
+correct   i10 r2 [plain,plain,agent] The price of the Geo Insulated Jogging Pant on this site is **$51**.
+[run] 14 judge verdicts pending; rerun the same command after the judge quota resets.
+
+category      correct  wrong  abstained  pending
+static         27/30       0          0        3
+js_heavy       17/30       0          5        8
+pdf            24/30       3          0        3
+interactive    27/30       3          0        0
+total          95/120      6          5       14
+WARNING: 5/120 empty final answers; check the raw logs before trusting these numbers.
+
+[quota] this session: list-price $1.6043, actual $0
+logs: C:\Users\aniru\tool-selection-bench\runs\20261108T172740Z_flash-lite_free
+exit 0

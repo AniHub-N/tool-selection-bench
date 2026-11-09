@@ -132,19 +132,45 @@ def judge(task: dict[str, Any], answer: str, cfg: dict[str, Any], quota: Any,
     return {"correct": ok, "reason": reason, "raw": out["message"].content, "list_usd": out["list_usd"]}
 
 
+OUTCOMES = ("correct", "wrong", "abstained", "pending")
+
+
+def abstained(answer: str | None) -> bool:
+    """No answer at all: None or empty/whitespace final text (e.g. Flash-Lite's forced final turn
+    after the tool never delivered the answer). An explicit "I couldn't find it" is NOT counted
+    here; it is a non-empty answer and the check/judge grades it wrong."""
+    return not (answer or "").strip()
+
+
+def outcome_of(sc: dict[str, Any], answer: str | None = None) -> str:
+    """correct | wrong | abstained | pending. Works on score dicts written before `outcome`
+    existed (oracle rows) by recomputing from the answer."""
+    if sc.get("outcome"):
+        return sc["outcome"]
+    if sc.get("correct") is None:
+        return "pending"
+    if sc["correct"]:
+        return "correct"
+    return "abstained" if abstained(answer) or sc.get("method") == "judge_skipped_empty" else "wrong"
+
+
 def score(task: dict[str, Any], answer: str | None, cfg: dict[str, Any], quota: Any,
           complete: Callable[..., dict] | None = None) -> dict[str, Any]:
-    """{"correct": bool|None, "method": ..., "judge": {...}?}. Empty answers fail without a judge call."""
+    """{"correct": bool|None, "outcome": correct|wrong|abstained|pending, "method": ..., "judge": {...}?}.
+    `correct` stays False for abstentions (accuracy is unchanged); `outcome` separates an
+    abstention from a wrong answer. Empty answers never reach the judge."""
+    if abstained(answer):
+        return {"correct": False, "outcome": "abstained", "method": "abstained"}
     det = check(task, answer)
     if det is not None:
-        out: dict[str, Any] = {"correct": det, "method": task["check_type"]}
-        if not det and (answer or "").strip():
+        out: dict[str, Any] = {"correct": det, "outcome": "correct" if det else "wrong",
+                               "method": task["check_type"]}
+        if not det:
             out["format_suspect"] = format_suspect(task, answer)
         return out
-    if not (answer or "").strip():
-        return {"correct": False, "method": "judge_skipped_empty"}
     j = judge(task, answer or "", cfg, quota, complete)
-    return {"correct": j["correct"], "method": "judge", "judge": j}
+    oc = {True: "correct", False: "wrong", None: "pending"}[j["correct"]]
+    return {"correct": j["correct"], "outcome": oc, "method": "judge", "judge": j}
 
 
 def _norm(url: str) -> str:

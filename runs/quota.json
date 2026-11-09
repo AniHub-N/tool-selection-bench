@@ -8,24 +8,24 @@
     },
     "flash-lite": {
       "day": "2026-11-09",
-      "requests": 252,
-      "tokens_in": 630748,
-      "tokens_out": 9301
+      "requests": 301,
+      "tokens_in": 812806,
+      "tokens_out": 11227
     }
   },
   "firecrawl_scrape": {
-    "2026-11": 185.0
+    "2026-11": 191.0
   },
   "tinyfish_fetch": {
     "2026-11-08": 82,
-    "2026-11-09": 10
+    "2026-11-09": 11
   },
   "tinyfish_agent": {
-    "usd": 3.44,
-    "steps": 215,
-    "calls": 48
+    "usd": 3.968,
+    "steps": 248,
+    "calls": 55
   },
-  "list_usd_total": 5.032234,
+  "list_usd_total": 5.649671,
   "nvidia": {
     "credits": 8,
     "dropped": "2026-11-08",

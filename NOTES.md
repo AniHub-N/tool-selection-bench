@@ -477,3 +477,8 @@ check and writes `tasks/plain_visibility.json`.
   at 45/120 rows and resumes after the 08:00 UTC reset.
 - Judge budget: 15 free-choice judge calls (5 judge tasks x 3) + 4 pending oracle cells = 19
   against the Flash stop at 18, so one verdict may roll to the following day.
+
+- Free choice finished 2026-11-09 08:50 UTC: 120 rows, 14 judge-pending (the Flash judge quota ran
+  out again right after the reset). The anon ablation (`--mode anon`, names tool_1..4, brand-free
+  descriptions kept in code so the experiment hash is unchanged) finished at 40/40 with 5 judge-pending.
+  Rerun both commands after the next reset to fill in the judge verdicts.

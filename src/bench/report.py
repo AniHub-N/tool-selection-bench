@@ -131,10 +131,10 @@ def chart_pick_vs_best(tasks: list[dict], runs: list[tuple[str, Path]], out: Pat
                 left += share
             ax.text(101, yi, f"n={sum(cnt.values())}", va="center", fontsize=7, color=INK2)
         ax.set_yticks(range(len(rows)), ["all tasks"] + [CAT_LABEL[c] for c in CATS], color=INK)
-        ax.invert_yaxis()
         ax.set_xlim(0, 112)
         ax.set_xticks([0, 25, 50, 75, 100], ["0%", "25%", "50%", "75%", "100%"])
         ax.set_title(label, loc="left", fontsize=10, color=INK)
+    axes[0][0].invert_yaxis()  # shared y: invert once, not per panel
     handles = [plt.Rectangle((0, 0), 1, 1, color=KIND_COLOR[k]) for k in KINDS]
     fig.legend(handles, ["picked the oracle-best (cheapest capable) tool", "picked another capable tool",
                          "picked a tool that can't solve it", "no oracle verdict for the pick"],

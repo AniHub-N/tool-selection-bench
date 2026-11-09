@@ -28,3 +28,35 @@ correct   j08 r0 [plain,fc] According to the API description on the page, you ca
 pending   j09 r0 [tff,agent] There are **4** operations listed under the 'store' tag:  1. **GET `/store/inven
 wrong     j10 r0 [plain,tff] The author of the last quote on that page is **Elie Wiesel**.
 correct   p01 r0 [plain] According to the Bitcoin whitepaper (Page 8), in the table of attacker success p
+correct   p02 r0 [plain] According to Table 2 on page 8 of the paper, the training cost in FLOPs of the *
+correct   p03 r0 [plain,plain] According to **Table 1** in the paper (GLUE Test results), the scores for BERT o
+correct   p04 r0 [plain] Based on **Table 2** ("Top-1 error (%, 10-crop testing) on ImageNet validation")
+correct   p05 r0 [plain] On the **PhC-U373** dataset (from the ISBI cell tracking challenge 2015), the U-
+correct   p06 r0 [plain] According to Table 1 in the paper, adversarial nets got a Parzen window-based lo
+correct   p07 r0 [plain,agent,fc] According to this manuscript, the pre-ALGOL meeting where Heinz Zemanek expresse
+correct   p08 r0 [plain] Based on Table 1 (and Table 2) of the December 2023 Consumer Price Index report 
+correct   p09 r0 [plain] Per the table in **Figure 3** (found on page 7 of the paper), **BN-x5** needed *
+pending   p10 r0 [plain,plain] Based on Table 3 in the paper ("Comparison of architectures using models trained
+correct   i01 r0 [agent] The price of the Lando Gym Jacket is **$99**.
+correct   i02 r0 [plain,fc,agent] The 2010 film on this page that had 3 nominations and 2 awards is **Alice in Won
+correct   i03 r0 [agent] Based on the team search, the Toronto Maple Leafs had **247** goals for (GF) in 
+correct   i04 r0 [plain] The author of the first quote on page 4 of quotes.toscrape.com is **Dr. Seuss**.
+correct   i05 r0 [plain,plain] There are **110** books in the Nonfiction category on this site.
+correct   i06 r0 [agent] The UPC of the book 'Sharp Objects' on Books to Scrape is **e00eb4fd7b871a48**.
+correct   i07 r0 [tff,plain] Zenaida Frank's extension number is **7439**.
+correct   i08 r0 [plain,agent] Zorita Serrano's start date in the table is **2012/06/01** (June 1, 2012).
+wrong     i09 r0 [plain,plain] There are **8** quotes on the site tagged with 'humor' in total (7 on the first 
+abstained i10 r0 [plain,plain,agent] 
+[run] 5 judge verdicts pending; rerun the same command after the judge quota resets.
+
+category      correct  wrong  abstained  pending
+static          9/10       0          0        1
+js_heavy        5/10       1          1        3
+pdf             9/10       0          0        1
+interactive     8/10       1          1        0
+total          31/40       2          2        5
+WARNING: 2/40 empty final answers; check the raw logs before trusting these numbers.
+
+[quota] this session: list-price $1.0396, actual $0
+logs: C:\Users\aniru\tool-selection-bench\runs\20261109T085011Z_flash-lite_anon
+exit 0
